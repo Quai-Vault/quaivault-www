@@ -1,0 +1,431 @@
+@import "tailwindcss";
+
+@theme {
+  /* Vault color palette - matching the existing app */
+  --color-vault-black: #0a0a0a;
+  --color-vault-dark-1: #0f0f0f;
+  --color-vault-dark-2: #141414;
+  --color-vault-dark-3: #1a1a1a;
+  --color-vault-dark-4: #222222;
+
+  /* Light mode vault colors */
+  --color-vault-light-1: #ffffff;
+  --color-vault-light-2: #f8f9fa;
+  --color-vault-light-3: #f1f3f4;
+  --color-vault-light-4: #e8eaed;
+
+  /* Primary red palette */
+  --color-primary-400: #f87171;
+  --color-primary-500: #ef4444;
+  --color-primary-600: #dc2626;
+  --color-primary-700: #b91c1c;
+  --color-primary-800: #991b1b;
+
+  /* Text colors - dark mode */
+  --color-dark-100: #f5f5f5;
+  --color-dark-200: #e5e5e5;
+  --color-dark-300: #d4d4d4;
+  --color-dark-400: #a3a3a3;
+  --color-dark-500: #737373;
+  --color-dark-600: #525252;
+  --color-dark-700: #404040;
+
+  /* Fonts */
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root {
+  /* Default to dark mode colors */
+  --bg-primary: var(--color-vault-black);
+  --bg-secondary: var(--color-vault-dark-1);
+  --bg-tertiary: var(--color-vault-dark-2);
+  --bg-card: var(--color-vault-dark-3);
+  --bg-card-hover: var(--color-vault-dark-4);
+  --border-color: var(--color-vault-dark-4);
+  --text-primary: var(--color-dark-100);
+  --text-secondary: var(--color-dark-200);
+  --text-tertiary: var(--color-dark-400);
+  --text-muted: var(--color-dark-500);
+}
+
+html.light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f4;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8f9fa;
+  --border-color: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-tertiary: #6b7280;
+  --text-muted: #9ca3af;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: transparent;
+  color: var(--text-secondary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary-600);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-500);
+}
+
+/* Background pattern overlay */
+.bg-vault-mesh {
+  background-image:
+    linear-gradient(rgba(220, 38, 38, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(220, 38, 38, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+html.light .bg-vault-mesh {
+  background-image:
+    linear-gradient(rgba(220, 38, 38, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(220, 38, 38, 0.05) 1px, transparent 1px);
+}
+
+/* Ambient background glow - transparent to show 3D scene */
+.bg-vault-ambient {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(220, 38, 38, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(185, 28, 28, 0.1), transparent);
+  transition: background 0.3s ease;
+}
+
+html.light .bg-vault-ambient {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(220, 38, 38, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(185, 28, 28, 0.05), transparent);
+}
+
+/* Text gradients */
+.text-gradient-red {
+  background: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+html.light .text-gradient-red {
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-800));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Text glow effect */
+.vault-text-glow {
+  text-shadow:
+    0 0 20px rgba(220, 38, 38, 0.5),
+    0 0 40px rgba(220, 38, 38, 0.3),
+    0 0 60px rgba(220, 38, 38, 0.2);
+}
+
+html.light .vault-text-glow {
+  text-shadow:
+    0 0 20px rgba(220, 38, 38, 0.3),
+    0 0 40px rgba(220, 38, 38, 0.15);
+}
+
+/* Button styles */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-700));
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.25);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(220, 38, 38, 0.35);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--color-primary-600);
+}
+
+/* Card styles */
+.vault-card {
+  display: block;
+  background: linear-gradient(180deg, var(--bg-tertiary), var(--bg-secondary));
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+html.light .vault-card {
+  background: var(--bg-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.vault-card:hover {
+  border-color: rgba(220, 38, 38, 0.3);
+  box-shadow: 0 0 30px rgba(220, 38, 38, 0.1);
+}
+
+html.light .vault-card:hover {
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.15);
+}
+
+/* Panel styles */
+.vault-panel {
+  display: block;
+  background: linear-gradient(180deg, var(--bg-card), var(--bg-tertiary));
+  border-top: 2px solid var(--color-primary-600);
+  border-radius: 0.5rem;
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+html.light .vault-panel {
+  background: var(--bg-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Text color utilities */
+.text-dark-100 { color: var(--text-primary) !important; }
+.text-dark-200 { color: var(--text-secondary) !important; }
+.text-dark-300 { color: var(--text-secondary) !important; }
+.text-dark-400 { color: var(--text-tertiary) !important; }
+.text-dark-500 { color: var(--text-muted) !important; }
+.text-dark-600 { color: var(--text-muted) !important; }
+
+/* Background color utilities */
+.bg-vault-dark-1 { background-color: var(--bg-secondary) !important; }
+.bg-vault-dark-2 { background-color: var(--bg-tertiary) !important; }
+.bg-vault-dark-3 { background-color: var(--bg-card) !important; }
+.bg-vault-dark-4 { background-color: var(--bg-card-hover) !important; }
+
+/* Border color utilities */
+.border-vault-dark-4 { border-color: var(--border-color) !important; }
+
+/* Primary color utilities */
+.text-primary-500 { color: var(--color-primary-500) !important; }
+.bg-primary-500 { background-color: var(--color-primary-500) !important; }
+.bg-primary-600 { background-color: var(--color-primary-600) !important; }
+.border-primary-600 { border-color: var(--color-primary-600) !important; }
+
+/* Font utilities */
+.font-display { font-family: var(--font-display) !important; }
+.font-body { font-family: var(--font-body) !important; }
+.font-mono { font-family: var(--font-mono) !important; }
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* Section transitions - start visible, animate on scroll */
+.section-fade-in {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.8s ease;
+}
+
+/* 3D Scene adjustments for light mode */
+html.light .absolute.inset-0.-z-10 {
+  opacity: 0.7;
+}
+
+/* Documentation-specific utilities */
+
+/* Note boxes - used for tips and small callouts */
+.doc-note {
+  background: rgba(26, 26, 26, 0.8);
+  border: 1px solid #525252;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+html.light .doc-note {
+  background: #f8f9fa;
+  border-color: #e5e7eb;
+}
+
+.doc-note-text {
+  color: #a3a3a3;
+}
+
+html.light .doc-note-text {
+  color: #6b7280;
+}
+
+/* Step badges - numbered circles for steps */
+.doc-step-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: rgba(127, 29, 29, 0.5);
+  border: 1px solid rgba(185, 28, 28, 0.5);
+  color: #f87171;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+html.light .doc-step-badge {
+  background: rgba(254, 226, 226, 0.8);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+/* Small step badges (for FAQ Q/A) */
+.doc-step-badge-sm {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.75rem;
+}
+
+/* Blue callouts - informational tips */
+.doc-callout-blue {
+  background: linear-gradient(to right, rgba(30, 58, 138, 0.4), rgba(30, 64, 175, 0.4), rgba(30, 58, 138, 0.4));
+  border-left: 4px solid #3b82f6;
+  border-radius: 0.375rem;
+  padding: 1rem;
+}
+
+html.light .doc-callout-blue {
+  background: linear-gradient(to right, rgba(219, 234, 254, 0.8), rgba(191, 219, 254, 0.8), rgba(219, 234, 254, 0.8));
+  border-left-color: #2563eb;
+}
+
+.doc-callout-blue-text {
+  color: rgba(191, 219, 254, 0.9);
+}
+
+html.light .doc-callout-blue-text {
+  color: #1e40af;
+}
+
+/* Yellow/warning callouts */
+.doc-callout-yellow {
+  background: linear-gradient(to right, rgba(113, 63, 18, 0.4), rgba(133, 77, 14, 0.4), rgba(113, 63, 18, 0.4));
+  border-left: 4px solid #eab308;
+  border-radius: 0.375rem;
+  padding: 1rem;
+}
+
+html.light .doc-callout-yellow {
+  background: linear-gradient(to right, rgba(254, 249, 195, 0.8), rgba(254, 240, 138, 0.8), rgba(254, 249, 195, 0.8));
+  border-left-color: #ca8a04;
+}
+
+.doc-callout-yellow-text {
+  color: rgba(254, 240, 138, 0.9);
+}
+
+html.light .doc-callout-yellow-text {
+  color: #854d0e;
+}
+
+/* Sidebar nav item hover */
+.doc-nav-item-hover:hover {
+  background: rgba(64, 64, 64, 0.5);
+}
+
+html.light .doc-nav-item-hover:hover {
+  background: rgba(243, 244, 246, 0.8);
+}
+
+/* Border utilities for docs */
+.doc-border {
+  border-color: #525252;
+}
+
+html.light .doc-border {
+  border-color: #e5e7eb;
+}

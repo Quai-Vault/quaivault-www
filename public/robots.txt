@@ -1,0 +1,7 @@
+# Quai Vault - robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://quaivault.org/sitemap.xml
