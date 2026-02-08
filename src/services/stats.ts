@@ -20,10 +20,10 @@ const PLACEHOLDER_STATS: VaultStats = {
 };
 
 /**
- * Fetch vault stats from Supabase
- * @param network - The network schema to query (e.g., 'testnet', 'mainnet')
+ * Fetch vault stats from Supabase using the configured schema
  */
-export async function fetchVaultStats(network: string = 'testnet'): Promise<VaultStats> {
+export async function fetchVaultStats(): Promise<VaultStats> {
+  const schema = config.supabaseSchema;
   if (!supabase) {
     console.warn('Supabase not configured, returning placeholder stats');
     return PLACEHOLDER_STATS;
@@ -32,7 +32,7 @@ export async function fetchVaultStats(network: string = 'testnet'): Promise<Vaul
   try {
     // Fetch wallet count
     const { count: walletCount, error: walletError } = await supabase
-      .schema(network)
+      .schema(schema)
       .from('wallets')
       .select('*', { count: 'exact', head: true });
 
@@ -44,7 +44,7 @@ export async function fetchVaultStats(network: string = 'testnet'): Promise<Vaul
     // Fetch deposits to calculate total QUAI secured
     // Note: amount is stored as TEXT (wei), so we need to fetch and sum
     const { data: deposits, error: depositsError } = await supabase
-      .schema(network)
+      .schema(schema)
       .from('deposits')
       .select('amount');
 

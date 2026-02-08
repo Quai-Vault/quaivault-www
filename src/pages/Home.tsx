@@ -14,7 +14,7 @@ export default function Home() {
 
   // Fetch live stats from Supabase
   useEffect(() => {
-    fetchVaultStats('testnet').then(setStats).catch(console.error)
+    fetchVaultStats().then(setStats).catch(console.error)
   }, [])
 
   useEffect(() => {

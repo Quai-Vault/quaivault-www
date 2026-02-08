@@ -14,6 +14,7 @@ export const config = {
   // Supabase (for stats queries)
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
   supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+  supabaseSchema: import.meta.env.VITE_SUPABASE_SCHEMA || 'testnet',
 
   // Check if Supabase is configured
   get isSupabaseConfigured() {
