@@ -41,15 +41,14 @@ export async function fetchVaultStats(): Promise<VaultStats> {
       return PLACEHOLDER_STATS;
     }
 
-    // Fetch deposits to calculate total QUAI secured
-    // Note: amount is stored as TEXT (wei), so we need to fetch and sum
-    const { data: deposits, error: depositsError } = await supabase
-      .schema(schema)
-      .from('deposits')
-      .select('amount');
+    // Fetch deposits and executed withdrawals to calculate net QUAI secured
+    const [depositsResult, withdrawalsResult] = await Promise.all([
+      supabase.schema(schema).from('deposits').select('amount'),
+      supabase.schema(schema).from('transactions').select('value').eq('status', 'executed'),
+    ]);
 
-    if (depositsError) {
-      console.error('Error fetching deposits:', depositsError);
+    if (depositsResult.error) {
+      console.error('Error fetching deposits:', depositsResult.error);
       return {
         walletCount: walletCount ?? 0,
         totalQuaiSecured: '0',
@@ -58,9 +57,16 @@ export async function fetchVaultStats(): Promise<VaultStats> {
     }
 
     // Sum all deposit amounts (handling big numbers as strings)
-    const totalWei = deposits?.reduce((sum, deposit) => {
+    const totalDeposited = depositsResult.data?.reduce((sum, deposit) => {
       return sum + BigInt(deposit.amount || '0');
     }, BigInt(0)) ?? BigInt(0);
+
+    // Sum all executed transaction values (QUAI sent out of vaults)
+    const totalWithdrawn = withdrawalsResult.data?.reduce((sum, tx) => {
+      return sum + BigInt(tx.value || '0');
+    }, BigInt(0)) ?? BigInt(0);
+
+    const totalWei = totalDeposited > totalWithdrawn ? totalDeposited - totalWithdrawn : BigInt(0);
 
     // Convert wei to QUAI (18 decimals)
     const totalQuai = formatQuaiAmount(totalWei);
