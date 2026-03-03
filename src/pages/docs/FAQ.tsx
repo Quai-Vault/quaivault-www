@@ -30,11 +30,11 @@ export default function FAQ() {
     },
     {
       question: "What are modules and why should I use them?",
-      answer: "Modules extend vault functionality. Social Recovery enables wallet recovery, Daily Limits allow quick small transactions, and Whitelist pre-approves trusted addresses. All modules are optional."
+      answer: "Modules are smart contracts that extend vault functionality. The Social Recovery module enables guardian-based wallet recovery if you lose access to your owner keys. Quai Vault also implements the Zodiac IAvatar standard, so any Zodiac-compatible module can be enabled via multisig consensus."
     },
     {
       question: "Can transactions be cancelled?",
-      answer: "Yes. The proposer can cancel immediately, or any owner can cancel if the transaction has reached threshold approvals. Once executed, transactions cannot be cancelled."
+      answer: "Yes. The proposer can cancel a transaction before the approval threshold has been reached. After the threshold is reached, cancellation requires a consensus cancel — a separate multisig self-call transaction. Once executed, expired, or failed, transactions cannot be cancelled."
     },
     {
       question: "How much gas do transactions cost?",
@@ -54,7 +54,7 @@ export default function FAQ() {
     },
     {
       question: "Can I have multiple modules enabled at once?",
-      answer: "Yes! All modules work independently and can be enabled simultaneously. For example, you can have Social Recovery, Daily Limits, and Whitelist all active at the same time."
+      answer: "Yes! A vault can have up to 50 modules enabled simultaneously. Social Recovery is the built-in module provided by Quai Vault. Since the vault implements the Zodiac IAvatar standard, any Zodiac-compatible module (Delay, Roles, Scope, etc.) can also be enabled via multisig consensus. All modules operate independently."
     },
     {
       question: "How do I verify a transaction on-chain?",
@@ -63,6 +63,22 @@ export default function FAQ() {
     {
       question: "What if I approve a transaction by mistake?",
       answer: "You can revoke your approval at any time before the transaction is executed. For regular multisig transactions, use the 'Revoke' button next to your approval. For social recovery approvals, guardians can also revoke their approval from the recovery management panel."
+    },
+    {
+      question: "What are timelocks?",
+      answer: "Timelocks add a mandatory waiting period between reaching the approval threshold and executing a transaction. There are two types: a vault-level minimum execution delay (applies to all transactions) and a per-transaction execution delay (requested by the proposer). The timer starts when the approval threshold is first reached and cannot be reset. Self-calls (vault administration) bypass timelocks to allow incident response."
+    },
+    {
+      question: "What happens when a transaction expires?",
+      answer: "A transaction with an expiration cannot be executed after the expiry timestamp passes. Anyone can call expireTransaction() to clean up expired transactions — this is permissionless. The transaction moves to the 'expired' state and must be re-proposed if still needed."
+    },
+    {
+      question: "What tokens can the vault hold?",
+      answer: "Quai Vault natively supports ERC-20 tokens, ERC-721 NFTs, and ERC-1155 multi-tokens. The vault contract includes the required receiver interfaces (onERC721Received, onERC1155Received, onERC1155BatchReceived) so tokens can be safely sent to your vault address."
+    },
+    {
+      question: "What does a 'failed' transaction mean?",
+      answer: "A failed transaction means the external call was attempted but reverted on-chain. Failed transactions are terminal — they cannot be retried or re-executed. You must propose a new transaction if you want to try again. This design prevents attackers from keeping transactions permanently stuck in a retryable state."
     }
   ];
 

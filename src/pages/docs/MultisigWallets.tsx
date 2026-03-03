@@ -80,7 +80,8 @@ export default function MultisigWallets() {
             </h3>
             <p className="text-base text-dark-300 leading-relaxed">
               Any owner can propose a transaction. A proposal includes the destination address, value (QUAI amount),
-              and data (for contract calls). Once proposed, the transaction enters a pending state waiting for approvals.
+              and data (for contract calls). Proposals can optionally include an expiration timestamp and an execution
+              delay. Once proposed, the transaction enters a pending state waiting for approvals.
             </p>
           </div>
 
@@ -93,12 +94,14 @@ export default function MultisigWallets() {
             </h3>
             <p className="text-base text-dark-300 leading-relaxed">
               Owners can approve pending proposals. Each owner can only approve once per proposal. Once the
-              threshold number of approvals is reached, any owner can execute the transaction. Owners can
-              also use <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">approveAndExecute</code> to
-              approve and execute in a single transaction when their approval meets the threshold.
-              If an owner changes their mind before execution, they can
+              threshold number of approvals is reached, the transaction becomes eligible for execution (subject
+              to any timelock). Owners can
+              use <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">approveAndExecute</code> to
+              approve and execute in a single transaction when their approval meets the threshold and no timelock
+              is configured. Owners can
               call <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">revokeApproval</code> to
-              withdraw their approval from a pending proposal.
+              withdraw their approval. The system uses epoch-based invalidation: when an owner is removed from
+              the vault, all of their in-flight approvals across every pending transaction are invalidated instantly.
             </p>
           </div>
 
@@ -158,10 +161,11 @@ export default function MultisigWallets() {
               3
             </div>
             <div className="flex-1">
-              <h3 className="text-base font-display font-bold text-dark-200 mb-1">Threshold Met</h3>
+              <h3 className="text-base font-display font-bold text-dark-200 mb-1">Threshold Met (Timelock Begins)</h3>
               <p className="text-base text-dark-300 leading-relaxed">
-                Once the threshold number of approvals is reached, the transaction becomes executable.
-                The frontend displays an "Execute" button for eligible transactions.
+                Once the threshold number of approvals is reached, the <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">approvedAt</code> timestamp
+                is recorded permanently. If the transaction has an execution delay, the timelock countdown begins.
+                The transaction becomes executable after the delay elapses.
               </p>
             </div>
           </div>
@@ -173,13 +177,23 @@ export default function MultisigWallets() {
             <div className="flex-1">
               <h3 className="text-base font-display font-bold text-dark-200 mb-1">Execution</h3>
               <p className="text-base text-dark-300 leading-relaxed">
-                Any owner can execute the transaction. Execution performs the actual on-chain action
-                (transfer, contract call, etc.). After execution, the transaction is marked as executed
-                and cannot be executed again. If the final approving owner wants to save a step, they can
-                use <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">approveAndExecute</code> to
-                approve and execute in a single transaction.
+                Any owner can execute the transaction once approvals are met and any timelock has elapsed.
+                Execution performs the actual on-chain action (transfer, contract call, etc.).
+                The transaction enters one of two terminal states: <strong className="text-dark-200">executed</strong> (success)
+                or <strong className="text-dark-200">failed</strong> (external call reverted). Both are final — the
+                transaction cannot be re-executed.
               </p>
             </div>
+          </div>
+
+          <div className="doc-note mt-4">
+            <p className="text-sm doc-note-text font-mono mb-1">Transaction States:</p>
+            <p className="text-sm doc-note-text">
+              Transactions have 5 possible states: <strong>pending</strong> (awaiting approvals or timelock),{' '}
+              <strong>executed</strong> (successfully completed), <strong>cancelled</strong> (cancelled by proposer
+              or consensus), <strong>expired</strong> (past expiration timestamp), and <strong>failed</strong> (execution
+              reverted). All states except pending are terminal.
+            </p>
           </div>
         </div>
       </div>
@@ -234,13 +248,20 @@ export default function MultisigWallets() {
           </p>
           <ul className="space-y-2 ml-4 list-disc">
             <li>
-              <strong className="text-dark-200">By the proposer:</strong> The owner who proposed the transaction
-              can cancel it immediately, regardless of approval count.
+              <strong className="text-dark-200">By the proposer (pre-approval):</strong> The owner who proposed the transaction
+              can cancel it, but only before the approval threshold is first reached. Once quorum has been met
+              (even if approvers later revoke), the proposer can no longer cancel.
             </li>
             <li>
-              <strong className="text-dark-200">By any owner:</strong> If the transaction has reached the threshold
-              number of approvals, any owner can cancel it. This prevents execution of proposals that may have
-              become undesirable.
+              <strong className="text-dark-200">By consensus (post-approval):</strong> After the threshold has been reached,
+              cancellation requires a new multisig proposal targeting the vault itself
+              via <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">cancelByConsensus</code>.
+              This ensures that approved transactions can only be cancelled with full multisig agreement.
+            </li>
+            <li>
+              <strong className="text-dark-200">By expiration:</strong> If a transaction has an expiration timestamp and it passes,
+              anyone can call <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">expireTransaction</code> to
+              clean it up. The transaction moves to the expired state and can never be executed.
             </li>
           </ul>
           <div className="doc-callout-yellow mt-3">
@@ -249,6 +270,73 @@ export default function MultisigWallets() {
               is only possible for pending transactions.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Timelocks & Expirations */}
+      <div className="vault-panel p-6 mb-6">
+        <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Timelocks & Expirations</h2>
+        <div className="space-y-4 text-base text-dark-300 leading-relaxed">
+          <div>
+            <h3 className="font-semibold text-dark-200 mb-2">Vault-Level Minimum Delay</h3>
+            <p className="text-dark-400 leading-relaxed">
+              When creating a vault, you can set
+              a <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">minExecutionDelay</code> (in
+              seconds). This enforces a floor on all external transactions — even if threshold is met instantly,
+              the transaction cannot execute until the delay elapses. Self-calls (owner management, threshold
+              changes) bypass this delay for incident response. The delay can be changed later via a multisig
+              self-call.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-dark-200 mb-2">Per-Transaction Execution Delay</h3>
+            <p className="text-dark-400 leading-relaxed">
+              When proposing a transaction, owners can request an additional execution delay beyond the vault
+              minimum. The effective delay is the maximum of the vault minimum and the requested delay. The
+              countdown begins when the approval threshold is first reached — the <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">approvedAt</code> timestamp
+              is set once and never cleared, preventing clock-gaming attacks.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-dark-200 mb-2">Transaction Expiration</h3>
+            <p className="text-dark-400 leading-relaxed">
+              Transactions can optionally include an expiration timestamp. After expiry, the transaction cannot
+              be executed and anyone can
+              call <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">expireTransaction()</code> for
+              cleanup. The contract validates that expiration allows at least one execution window after the
+              timelock completes.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Token Support */}
+      <div className="vault-panel p-6 mb-6">
+        <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Token Support</h2>
+        <div className="space-y-3 text-base text-dark-300 leading-relaxed">
+          <p>
+            Quai Vault natively supports holding and managing multiple token standards:
+          </p>
+          <ul className="space-y-2 ml-4 list-disc">
+            <li>
+              <strong className="text-dark-200">ERC-20 Tokens:</strong> Hold and send fungible tokens.
+              Propose transactions with encoded <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">transfer()</code> or <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">approve()</code> calls.
+            </li>
+            <li>
+              <strong className="text-dark-200">ERC-721 NFTs:</strong> Receive and send NFTs. The vault
+              implements <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">onERC721Received</code> for
+              safe transfers.
+            </li>
+            <li>
+              <strong className="text-dark-200">ERC-1155 Multi-Tokens:</strong> Receive and send multi-tokens. The vault
+              implements <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">onERC1155Received</code> and <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">onERC1155BatchReceived</code> for
+              safe transfers.
+            </li>
+          </ul>
+          <p>
+            The frontend displays token balances, NFT holdings, and ERC-1155 inventory in dedicated panels
+            on the vault detail page. Token metadata is automatically discovered by the indexer.
+          </p>
         </div>
       </div>
 
@@ -271,9 +359,17 @@ export default function MultisigWallets() {
             </p>
           </div>
           <div>
-            <h3 className="font-semibold text-dark-200 mb-2">Use Modules for Additional Security</h3>
+            <h3 className="font-semibold text-dark-200 mb-2">Configure Timelocks for High-Value Vaults</h3>
             <p className="text-dark-400 leading-relaxed">
-              Consider enabling modules like Daily Limits or Whitelist for additional security layers.
+              Set a minimum execution delay on your vault to give owners time to review and cancel suspicious
+              transactions after they reach threshold. Use transaction expirations to prevent stale proposals
+              from being executed long after they were proposed.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-dark-200 mb-2">Enable Social Recovery</h3>
+            <p className="text-dark-400 leading-relaxed">
+              Consider enabling the Social Recovery module to protect against key loss.
               See the <Link to="/docs/modules" className="text-primary-500 hover:text-primary-400 underline">Modules</Link> documentation.
             </p>
           </div>
@@ -299,7 +395,7 @@ export default function MultisigWallets() {
               Modules
             </h3>
             <p className="text-sm text-dark-400">
-              Extend your vault with Social Recovery, Daily Limits, and Whitelist modules.
+              Extend your vault with Social Recovery and Zodiac-compatible modules.
             </p>
           </Link>
           <Link

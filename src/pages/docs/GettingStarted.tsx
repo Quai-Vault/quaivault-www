@@ -198,7 +198,7 @@ export default function GettingStarted() {
                 <li>Propose transactions (transfers, contract calls, etc.)</li>
                 <li>Approve or reject pending proposals</li>
                 <li>Execute approved transactions</li>
-                <li>Enable modules (Social Recovery, Daily Limits, Whitelist)</li>
+                <li>Enable the Social Recovery module for guardian-based wallet recovery</li>
               </ul>
             </div>
           </div>
@@ -232,7 +232,7 @@ export default function GettingStarted() {
                 Explore Modules
               </h3>
               <p className="text-sm text-dark-400">
-                Extend your vault with Social Recovery, Daily Limits, and Whitelist modules.
+                Extend your vault with the Social Recovery module and any Zodiac-compatible modules.
               </p>
             </Link>
           </div>

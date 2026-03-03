@@ -26,7 +26,7 @@ export default function DocsIndex() {
     },
     {
       title: 'Modules',
-      description: 'Extend your vault with Social Recovery, Daily Limits, and Whitelist modules',
+      description: 'Extend your vault with the Social Recovery module and Zodiac-compatible modules',
       path: '/docs/modules',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

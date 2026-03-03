@@ -76,11 +76,12 @@ export default function Security() {
           </div>
 
           <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Replay Attack Prevention</h3>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Transaction Identification</h3>
             <p className="text-base text-dark-300 leading-relaxed">
-              Transaction hashes are computed using a <strong className="text-dark-200">nonce</strong> that increments
-              with each submitted transaction, combined with the <strong className="text-dark-200">chain ID</strong> and
-              the vault address. This prevents replay attacks both across chains and across different vaults on the same chain.
+              Transaction identifiers are hash-based, computed from the transaction content (destination, value, data,
+              nonce, chain ID, and vault address). This enables unordered execution — multiple transactions can be
+              in-flight simultaneously and executed in any order, eliminating head-of-line blocking. Chain ID and vault
+              address in the hash prevent replay attacks across chains and between different vaults.
             </p>
           </div>
 
@@ -111,6 +112,50 @@ export default function Security() {
               <li>Time delay prevents immediate takeovers</li>
               <li>Owner cancellation rights provide final safeguard</li>
             </ul>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Native Timelocks</h3>
+            <p className="text-base text-dark-300 leading-relaxed">
+              Timelocks are built into the core contract at two levels. The vault-level <code className="text-primary-400">minExecutionDelay</code> enforces
+              a floor on all external transactions. Individual transactions can request additional delay beyond the vault
+              minimum. The <code className="text-primary-400">approvedAt</code> timestamp is set once when quorum is first reached and is never
+              cleared — even if approvers subsequently revoke, the clock cannot be gamed. Self-calls (owner management,
+              threshold changes) always execute immediately, which is required for incident response.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Transaction Expiration</h3>
+            <p className="text-base text-dark-300 leading-relaxed">
+              Transactions can optionally include an expiration timestamp. After expiry, the transaction cannot be executed
+              and anyone can call <code className="text-primary-400">expireTransaction()</code> for permissionless cleanup. The contract uses a
+              dedicated <code className="text-primary-400">expiredTxs</code> mapping to unambiguously distinguish expired transactions from cancelled
+              ones. Expiration validation ensures there is always a guaranteed execution window between timelock completion
+              and expiry.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Epoch-Based Approval Invalidation</h3>
+            <p className="text-base text-dark-300 leading-relaxed">
+              When an owner is removed from the vault, their <code className="text-primary-400">ownerVersions</code> counter increments atomically. All
+              in-flight approvals from that owner become invalid instantly — an O(1) operation with no loops over active
+              transactions. If the same address is later re-added, their old approvals remain invalid because they belong
+              to a previous epoch. This prevents "ghost approval" resurrection attacks where a removed-and-re-added owner's
+              old approvals could cross the threshold.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Terminal Failure Handling</h3>
+            <p className="text-base text-dark-300 leading-relaxed">
+              Quai Vault follows Option B failure semantics for external calls. When a transaction execution fails (the
+              external call reverts), the transaction is marked as <code className="text-primary-400">failed</code> — a terminal state. It cannot be
+              re-executed. This prevents an attacker from crafting a transaction that permanently fails execution while
+              keeping the wallet's approval slot occupied. Self-calls (admin operations) always revert on failure because
+              partial admin state changes are unacceptable.
+            </p>
           </div>
         </div>
       </div>
@@ -144,8 +189,8 @@ export default function Security() {
           <div>
             <h3 className="font-semibold text-dark-200 mb-2">Module Configuration</h3>
             <ul className="space-y-1 ml-4 list-disc text-dark-400">
-              <li>Only whitelist trusted addresses</li>
-              <li>Set conservative daily limits</li>
+              <li>Configure appropriate timelocks for high-value transactions</li>
+              <li>Use transaction expirations to prevent stale proposals from executing</li>
               <li>Choose trusted guardians for social recovery</li>
               <li>Regularly review module configurations</li>
             </ul>
@@ -178,16 +223,6 @@ export default function Security() {
           </div>
 
           <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Daily Limit Module Scope</h3>
-            <p className="leading-relaxed">
-              The Daily Limit Module provides on-chain enforcement through its <code className="text-primary-400">executeBelowLimit()</code> function.
-              However, normal multisig transactions (via <code className="text-primary-400">executeTransaction()</code>) are not subject to daily limits—they
-              require threshold approvals regardless. The module is designed to provide a fast path for small transfers, not to restrict
-              the core multisig functionality.
-            </p>
-          </div>
-
-          <div>
             <h3 className="text-base font-display font-bold text-dark-200 mb-2">Social Recovery Guardians</h3>
             <p className="leading-relaxed">
               If a threshold of guardians is compromised, they can recover your vault. Choose guardians
@@ -202,62 +237,6 @@ export default function Security() {
               via <code className="text-primary-400">delegatecall</code>. This means a malicious or buggy module has
               full access to the vault's storage and funds. Only enable modules that have been reviewed and are trusted.
               Module enabling and disabling is gated by multisig approval to mitigate this risk.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Audit Status */}
-      <div className="vault-panel p-6 mb-6">
-        <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Security Review Status</h2>
-        <div className="space-y-3 text-base text-dark-300">
-          <p>
-            <strong className="text-dark-200">Current Status:</strong> Internal security review completed (Testnet)
-          </p>
-          <p>
-            An internal security analysis has been completed with the following results:
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 my-4">
-            <div className="vault-panel p-3 text-center">
-              <div className="text-xl font-bold text-green-500">0</div>
-              <div className="text-xs text-dark-400">Critical</div>
-            </div>
-            <div className="vault-panel p-3 text-center">
-              <div className="text-xl font-bold text-green-500">2 Fixed</div>
-              <div className="text-xs text-dark-400">High</div>
-            </div>
-            <div className="vault-panel p-3 text-center">
-              <div className="text-xl font-bold text-green-500">5 Fixed</div>
-              <div className="text-xs text-dark-400">Medium</div>
-            </div>
-            <div className="vault-panel p-3 text-center">
-              <div className="text-xl font-bold text-yellow-500">6 Open</div>
-              <div className="text-xs text-dark-400">Low</div>
-            </div>
-          </div>
-          <p>
-            All critical, high, and medium severity issues have been addressed. Low severity issues
-            remain open as acceptable risk. A formal third-party audit is planned before mainnet deployment.
-            All code is open source and available for review.
-          </p>
-          <div className="mt-4">
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Test Coverage</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="vault-panel p-3 text-center">
-                <div className="text-xl font-bold text-green-500">154</div>
-                <div className="text-xs text-dark-400">Contract Tests Passing</div>
-              </div>
-              <div className="vault-panel p-3 text-center">
-                <div className="text-xl font-bold text-green-500">357</div>
-                <div className="text-xs text-dark-400">Frontend Tests Passing</div>
-              </div>
-            </div>
-          </div>
-          <div className="doc-note mt-3">
-            <p className="text-sm doc-note-text font-mono mb-1">Security Researchers</p>
-            <p className="text-sm doc-note-text">
-              If you discover a security vulnerability, please report it responsibly via GitHub's
-              private security reporting feature.
             </p>
           </div>
         </div>

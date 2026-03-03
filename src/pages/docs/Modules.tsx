@@ -5,7 +5,7 @@ export default function Modules() {
   return (
     <DocLayout
       title="Modules"
-      description="Extend your multisig vault with powerful modules that add additional security features and functionality."
+      description="Extend your multisig vault with Zodiac-compatible modules for additional security features and functionality."
     >
       {/* Overview */}
       <div className="vault-panel p-6 mb-6">
@@ -21,14 +21,16 @@ export default function Modules() {
             Zodiac <code className="text-primary-400">IAvatar</code> interface, specifically
             the <code className="text-primary-400">execTransactionFromModule()</code> function. This
             standardized interface ensures modules can only perform actions the vault has authorized.
-            Module configuration functions (such as setting limits, adding to whitelists, or setting up
-            recovery) require multisig approval -- the caller must be the QuaiVault
+            Module configuration functions (such as setting up guardians for recovery) require multisig
+            approval -- the caller must be the QuaiVault
             itself (<code className="text-primary-400">msg.sender == wallet</code>), ensuring that no
             single owner can unilaterally change module settings.
           </p>
           <p>
-            All modules are optional and can be enabled independently. You can have multiple modules
-            active simultaneously, each providing different capabilities.
+            Quai Vault implements the <strong className="text-dark-200">Zodiac IAvatar</strong> standard,
+            which means any Zodiac-compatible module can be enabled on your vault via multisig consensus.
+            The Social Recovery Module is the built-in module provided by Quai Vault, but the module system
+            is open and extensible.
           </p>
         </div>
       </div>
@@ -117,148 +119,43 @@ export default function Modules() {
         </div>
       </div>
 
-      {/* Daily Limit Module */}
+      {/* Zodiac Compatibility */}
       <div className="vault-panel p-6 mb-6">
         <h2 className="text-lg font-display font-bold text-dark-200 mb-4 flex items-center gap-3">
           <svg className="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
           </svg>
-          Daily Limit Module
+          Zodiac-Compatible Modules
         </h2>
 
         <div className="space-y-4 text-base text-dark-300">
           <div>
             <h3 className="text-base font-display font-bold text-dark-200 mb-2">Overview</h3>
             <p className="leading-relaxed">
-              The Daily Limit Module allows single-owner execution of transactions below a configured
-              daily spending limit. This provides convenience for small, routine transactions while
-              maintaining multisig security for larger amounts.
+              Quai Vault implements the <strong className="text-dark-200">Zodiac IAvatar</strong> interface,
+              an open standard for modular smart account governance. This means any module built to the Zodiac
+              specification can be enabled on your vault through a multisig transaction.
             </p>
           </div>
 
           <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">How It Works</h3>
-            <ol className="space-y-2 ml-4 list-decimal leading-relaxed">
-              <li>
-                <strong className="text-dark-200">Configuration:</strong> Set a daily spending limit
-                in QUAI. Calling <code className="text-primary-400">setDailyLimit()</code> requires multisig
-                approval -- the caller must be the QuaiVault itself
-                (i.e., <code className="text-primary-400">msg.sender == wallet</code>), not just any owner.
-              </li>
-              <li>
-                <strong className="text-dark-200">Single-Owner Execution:</strong> Any owner can execute
-                transfers below the daily limit using the module's <code className="text-primary-400">executeBelowLimit()</code> function,
-                bypassing the normal multisig approval flow. The module interacts with the QuaiVault via the
-                Zodiac <code className="text-primary-400">IAvatar</code> interface,
-                calling <code className="text-primary-400">execTransactionFromModule()</code> to execute the transfer.
-              </li>
-              <li>
-                <strong className="text-dark-200">On-Chain Tracking:</strong> The module tracks spending
-                on-chain over rolling 24-hour periods. Once the limit is reached, transactions require normal
-                multisig approvals. Use the view
-                functions <code className="text-primary-400">getRemainingLimit()</code> and <code className="text-primary-400">getTimeUntilReset()</code> to
-                check available spending and when the current period resets.
-              </li>
-            </ol>
-          </div>
-
-          <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Key Features</h3>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Compatible Module Types</h3>
             <ul className="space-y-2 ml-4 list-disc leading-relaxed">
-              <li>Configurable daily spending limit (requires multisig approval to set)</li>
-              <li>Rolling 24-hour window with automatic reset</li>
-              <li>View functions: <code className="text-primary-400">getRemainingLimit()</code> and <code className="text-primary-400">getTimeUntilReset()</code> for querying current state</li>
-              <li>On-chain enforcement through dedicated module function</li>
-              <li>Only applies to simple QUAI transfers (not contract calls)</li>
+              <li><strong className="text-dark-200">Zodiac Delay:</strong> Enforce time delays on module-executed transactions</li>
+              <li><strong className="text-dark-200">Zodiac Roles:</strong> Granular permission system for different roles</li>
+              <li><strong className="text-dark-200">Zodiac Scope:</strong> Restrict which functions a module can call</li>
+              <li><strong className="text-dark-200">Snapshot + SafeSnap:</strong> Execute on-chain proposals from Snapshot governance votes</li>
+              <li><strong className="text-dark-200">Custom Modules:</strong> Build your own modules using the IAvatar interface</li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Use Cases</h3>
-            <ul className="space-y-2 ml-4 list-disc leading-relaxed">
-              <li>Small routine payments without requiring multiple approvals</li>
-              <li>Operational expenses that need quick execution</li>
-              <li>Reducing friction for low-value transactions</li>
-            </ul>
-          </div>
-
-          <div className="doc-note mt-4">
-            <p className="text-sm doc-note-text font-mono mb-1">Note:</p>
-            <p className="text-sm doc-note-text">
-              Daily limits only apply to simple QUAI transfers. Contract calls always require multisig
-              approvals regardless of the daily limit configuration.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Whitelist Module */}
-      <div className="vault-panel p-6 mb-6">
-        <h2 className="text-lg font-display font-bold text-dark-200 mb-4 flex items-center gap-3">
-          <svg className="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-          Whitelist Module
-        </h2>
-
-        <div className="space-y-4 text-base text-dark-300">
-          <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Overview</h3>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Module Limits</h3>
             <p className="leading-relaxed">
-              The Whitelist Module allows you to pre-approve addresses for quick transaction execution.
-              Transactions to whitelisted addresses can be executed immediately by a single owner without
-              waiting for approvals.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">How It Works</h3>
-            <ol className="space-y-2 ml-4 list-decimal leading-relaxed">
-              <li>
-                <strong className="text-dark-200">Configuration:</strong> Add addresses to the whitelist
-                using <code className="text-primary-400">addToWhitelist()</code> or <code className="text-primary-400">batchAddToWhitelist()</code> for
-                multiple addresses at once. These functions require multisig approval -- the caller must be
-                the QuaiVault itself (i.e., <code className="text-primary-400">msg.sender == wallet</code>),
-                not just any owner. You can remove addresses at any time through the same approval flow.
-              </li>
-              <li>
-                <strong className="text-dark-200">Automatic Execution:</strong> When an owner proposes a
-                transaction to a whitelisted address, it can be executed immediately without approvals. The
-                module uses the Zodiac <code className="text-primary-400">IAvatar</code> interface,
-                calling <code className="text-primary-400">execTransactionFromModule()</code> on the QuaiVault.
-              </li>
-              <li>
-                <strong className="text-dark-200">Flexible Usage:</strong> Works with both QUAI transfers
-                and contract calls to whitelisted addresses.
-              </li>
-            </ol>
-          </div>
-
-          <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Key Features</h3>
-            <ul className="space-y-2 ml-4 list-disc leading-relaxed">
-              <li>Add or remove addresses from whitelist (single or batch via <code className="text-primary-400">batchAddToWhitelist()</code>)</li>
-              <li>Works with transfers and contract calls</li>
-              <li>Single-owner execution for whitelisted addresses</li>
-              <li>Manage whitelist through multisig transactions</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Use Cases</h3>
-            <ul className="space-y-2 ml-4 list-disc leading-relaxed">
-              <li>Frequent transactions to trusted addresses (exchanges, services)</li>
-              <li>Automated systems that need quick execution</li>
-              <li>Reducing approval overhead for known-good addresses</li>
-            </ul>
-          </div>
-
-          <div className="doc-callout-yellow mt-4">
-            <p className="text-sm doc-callout-yellow-text">
-              <strong>Security Warning:</strong> Only whitelist addresses you fully trust. Whitelisting an
-              address enables ANY function call to that address without multisig approvals, not just simple
-              value transfers. This means arbitrary contract interactions with whitelisted addresses bypass
-              the normal approval flow. Regularly review and update your whitelist.
+              A vault can have up to <strong className="text-dark-200">50 modules</strong> enabled simultaneously.
+              Modules are stored in a linked list following the Zodiac standard, enabling efficient iteration
+              and management. Each module operates independently and cannot modify its own permissions --
+              only the vault (via multisig consensus) can enable or disable modules.
             </p>
           </div>
         </div>
@@ -286,30 +183,6 @@ export default function Modules() {
             removes its functionality but doesn't affect existing configurations (they'll be restored if you
             re-enable the module).
           </p>
-        </div>
-      </div>
-
-      {/* Module Combinations */}
-      <div className="vault-panel p-6 mb-6">
-        <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Module Combinations</h2>
-        <div className="space-y-3 text-base text-dark-300 leading-relaxed">
-          <p>
-            You can enable multiple modules simultaneously. They work independently:
-          </p>
-          <ul className="space-y-2 ml-4 list-disc">
-            <li>
-              <strong className="text-dark-200">Daily Limit + Whitelist:</strong> Transactions to whitelisted
-              addresses bypass both daily limit checks and approval requirements.
-            </li>
-            <li>
-              <strong className="text-dark-200">Social Recovery + Others:</strong> Social Recovery works
-              independently and can be used regardless of other module configurations.
-            </li>
-            <li>
-              <strong className="text-dark-200">All Modules:</strong> You can enable all three modules
-              for maximum flexibility and security.
-            </li>
-          </ul>
         </div>
       </div>
 

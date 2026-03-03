@@ -29,27 +29,32 @@ export default function About() {
     {
       icon: Zap,
       title: 'Transaction Management',
-      description: 'Propose, approve, execute, and cancel transactions. Full control over the transaction lifecycle.',
+      description: '5-state transaction lifecycle with propose, approve, execute, cancel, and expire. Full control with hash-based unordered execution.',
+    },
+    {
+      icon: Lock,
+      title: 'Native Timelocks',
+      description: 'Vault-level and per-transaction execution delays. Configurable time windows before transactions can execute.',
     },
     {
       icon: RefreshCw,
-      title: 'Owner Management',
-      description: 'Add or remove owners, change approval thresholds—all through multisig transactions for security.',
+      title: 'Token Support',
+      description: 'Hold and manage ERC-20 tokens, ERC-721 NFTs, and ERC-1155 multi-tokens natively in your vault.',
     },
     {
       icon: Code,
-      title: 'Modular Architecture',
-      description: 'Extensible module system for additional features like daily limits, whitelisting, and social recovery.',
+      title: 'Zodiac Compatible',
+      description: 'Full Zodiac IAvatar compliance enables DAO treasury management, governance integration, and extensible modules including Social Recovery.',
     },
     {
       icon: Shield,
-      title: 'Zodiac Compatible',
-      description: 'Full Zodiac IAvatar compliance enables DAO treasury management and integration with governance ecosystems.',
+      title: 'Contract Signatures',
+      description: 'EIP-1271 message signing via multisig consensus. Sign and unsign messages through the standard approval flow.',
     },
     {
       icon: Globe,
-      title: 'Real-Time Updates',
-      description: 'Real-time subscriptions keep your wallet state synchronized instantly. Falls back to polling if unavailable.',
+      title: 'Real-Time Indexer',
+      description: 'Supabase-powered indexer tracks all vault events in real time — transactions, approvals, token transfers, and more.',
     },
   ]
 
@@ -77,11 +82,10 @@ export default function About() {
   ]
 
   const decentralizationBenefits = [
-    { title: 'No Backend Required', description: 'All wallet operations work directly with the blockchain' },
-    { title: 'No Third-Party Dependencies', description: 'Your interactions are between you and the smart contracts' },
-    { title: 'Self-Hostable', description: 'The entire frontend can run on IPFS or your own server' },
+    { title: 'On-Chain Authority', description: 'All wallet operations are enforced by immutable smart contracts — no off-chain intermediaries' },
+    { title: 'Self-Hostable', description: 'The entire frontend and indexer can run on your own infrastructure' },
     { title: 'Censorship Resistant', description: 'No single entity can block or control your wallet' },
-    { title: 'Privacy First', description: 'No data is sent to external services' },
+    { title: 'Open Source', description: 'All contracts, indexer, and frontend code are publicly auditable' },
   ]
 
   return (
@@ -147,9 +151,9 @@ export default function About() {
               </h2>
               <div className="space-y-4 text-dark-300 leading-relaxed">
                 <p>
-                  <strong className="text-primary-500">Quai Vault is built on a fundamental principle: complete decentralization.</strong>{' '}
-                  Every interaction with your multisig wallet works directly through blockchain RPC calls—no third-party services,
-                  no centralized backends, no intermediaries.
+                  <strong className="text-primary-500">Quai Vault is built on a fundamental principle: on-chain authority.</strong>{' '}
+                  All wallet logic, access control, timelocks, and module permissions are enforced by immutable smart contracts on Quai Network.
+                  Transaction writes go directly through blockchain RPC — no intermediaries can authorize or block your operations.
                 </p>
 
                 <div className={`rounded-lg p-6 mt-6 border ${
@@ -175,8 +179,8 @@ export default function About() {
                 </div>
 
                 <p className="text-dark-500 italic mt-4">
-                  An optional indexer provides real-time subscriptions and faster queries,
-                  but is never required—the frontend automatically falls back to direct RPC calls if unavailable.
+                  A Supabase indexer powers real-time data synchronization for the frontend, tracking
+                  transactions, approvals, token transfers, and module events as they happen on-chain.
                 </p>
               </div>
             </div>
@@ -193,10 +197,11 @@ export default function About() {
               </h2>
               <div className="space-y-4">
                 {[
-                  { step: 1, title: 'Create Your Vault', description: 'Deploy a new vault in a single transaction. Specify owners and an approval threshold (e.g., 2 of 3). The factory uses CREATE2 for deterministic, shard-aware addresses.' },
-                  { step: 2, title: 'Propose Transactions', description: 'Any owner can propose a transaction (sending QUAI, calling contracts, etc.). The transaction is created but not executed yet.' },
-                  { step: 3, title: 'Gather Approvals', description: 'Other owners review and approve the transaction. Once the threshold is met (e.g., 2 of 3 approvals), the transaction becomes ready to execute.' },
-                  { step: 4, title: 'Execute', description: 'Any owner can execute the transaction once it has enough approvals. The transaction is then executed on-chain and the funds or contract call is processed.' },
+                  { step: 1, title: 'Create Your Vault', description: 'Deploy a new vault in a single transaction. Specify owners, an approval threshold (e.g., 2 of 3), and an optional minimum execution delay. The factory uses CREATE2 for deterministic, shard-aware addresses.' },
+                  { step: 2, title: 'Propose Transactions', description: 'Any owner can propose a transaction (sending QUAI, tokens, NFTs, calling contracts). Optionally set an expiration and execution delay. The transaction enters the pending state.' },
+                  { step: 3, title: 'Gather Approvals', description: 'Other owners review and approve the transaction. Once the threshold is met (e.g., 2 of 3 approvals), the timelock begins if one is configured.' },
+                  { step: 4, title: 'Wait for Timelock', description: 'If the transaction has an execution delay, it becomes executable only after the delay elapses. The countdown starts from the moment quorum was first reached.' },
+                  { step: 5, title: 'Execute', description: 'Any owner can execute the transaction once approvals are met and the timelock has elapsed. The transaction is then processed on-chain.' },
                 ].map((item) => (
                   <div key={item.step} className={`rounded-lg p-6 border ${
                     theme === 'dark'
@@ -258,7 +263,7 @@ export default function About() {
                 <div>
                   <h3 className="font-display font-semibold text-dark-100 mb-3">Smart Contract Layer</h3>
                   <p className="text-dark-400 mb-3">
-                    Quai Vault deploys immutable smart contracts with Zodiac IAvatar compatibility and three core components:
+                    Quai Vault deploys immutable smart contracts with Zodiac IAvatar compatibility:
                   </p>
                   <ul className="space-y-2 ml-4">
                     <li className="flex items-start gap-2">
@@ -283,20 +288,20 @@ export default function About() {
                 <div>
                   <h3 className="font-display font-semibold text-dark-100 mb-3">Frontend Layer</h3>
                   <p className="text-dark-400 mb-3">
-                    Built with React and TypeScript, using a hybrid data fetching approach:
+                    Built with React and TypeScript, powered by the Supabase indexer:
                   </p>
                   <ul className="space-y-2 ml-4 text-dark-400">
                     <li className="flex items-start gap-2">
                       <span className="text-primary-500">•</span>
-                      <span><strong className="text-dark-200">Quais.js:</strong> Quai Network SDK for blockchain interactions</span>
+                      <span><strong className="text-dark-200">Quais.js:</strong> Quai Network SDK for blockchain interactions and transaction signing</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary-500">•</span>
-                      <span><strong className="text-dark-200">Hybrid Data Fetching:</strong> Indexer for fast reads, blockchain for writes</span>
+                      <span><strong className="text-dark-200">Supabase Indexer:</strong> Real-time event tracking for transactions, approvals, and token transfers</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary-500">•</span>
-                      <span><strong className="text-dark-200">No Backend Required:</strong> Core functionality works via direct RPC calls</span>
+                      <span><strong className="text-dark-200">Token Management:</strong> ERC-20 balances, NFT holdings, and ERC-1155 inventory panels</span>
                     </li>
                   </ul>
                 </div>
@@ -307,10 +312,13 @@ export default function About() {
                     <li className="flex items-start gap-2"><span className="text-primary-500">•</span> ReentrancyGuard protection on all execution functions</li>
                     <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Checks-Effects-Interactions pattern throughout</li>
                     <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Owner-only and self-only modifiers for access control</li>
-                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Threshold validation before execution</li>
-                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Nonce-based transaction hashing with chain ID for replay protection</li>
-                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Maximum 20 owners to prevent gas limit DoS</li>
-                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Module access control via linked list storage</li>
+                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Hash-based transaction IDs with unordered execution and replay protection</li>
+                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Epoch-based approval invalidation — owner removal atomically invalidates all in-flight approvals</li>
+                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Native timelocks with clock-gaming protection (approvedAt set once, never cleared)</li>
+                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Terminal failure handling — failed external calls cannot block the wallet</li>
+                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> EIP-1271 contract signatures via multisig consensus</li>
+                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Maximum 20 owners and 50 modules to prevent gas limit DoS</li>
+                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Module access control via Zodiac linked list storage</li>
                   </ul>
                 </div>
               </div>

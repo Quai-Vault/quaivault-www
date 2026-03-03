@@ -50,12 +50,10 @@ export default function DeveloperGuide() {
           </p>
           <div className="bg-vault-dark-4 rounded p-4 border border-dark-600 font-mono text-sm overflow-x-auto">
             <div className="space-y-2 text-dark-300">
-              <div><span className="text-dark-500">QUAIVAULT_IMPLEMENTATION:</span> <span className="text-primary-400">0x001e1c40f1B96f530eC816A68f760E34673Ee7b8</span></div>
-              <div><span className="text-dark-500">QUAIVAULT_FACTORY:</span> <span className="text-primary-400">0x00233Cb4F587287aFe5c7e88b971A3a36b3ba0d6</span></div>
-              <div><span className="text-dark-500">SOCIAL_RECOVERY_MODULE:</span> <span className="text-primary-400">0x003dFf172a2633E12A31761CC8126867bfC63686</span></div>
-              <div><span className="text-dark-500">DAILY_LIMIT_MODULE:</span> <span className="text-primary-400">0x005875F6D7CF819c50B2bdc8115466eD770670A8</span></div>
-              <div><span className="text-dark-500">WHITELIST_MODULE:</span> <span className="text-primary-400">0x00540EfEb4dC0Cbb965830A678eC9e6699663325</span></div>
-              <div><span className="text-dark-500">MULTISEND:</span> <span className="text-primary-400">0x0060a725Ef00CB737f24F7e00da94c1Ce03bf1Dc</span></div>
+              <div><span className="text-dark-500">QUAIVAULT:</span> <span className="text-primary-400">0x0044AbC8bdAaD4D482eDB22E1B946ACAaB2460C5</span></div>
+              <div><span className="text-dark-500">QUAIVAULT_FACTORY:</span> <span className="text-primary-400">0x00475fA887b961E04Cddd6202D49a3949f2d45D7</span></div>
+              <div><span className="text-dark-500">SOCIAL_RECOVERY_MODULE:</span> <span className="text-primary-400">0x003Ee41F8fFacFCf54119B9cf223ab4CB65ebdF0</span></div>
+              <div><span className="text-dark-500">MULTISEND:</span> <span className="text-primary-400">0x002BDFaA9e74022B44035995172B030Ead6aA6Bd</span></div>
             </div>
           </div>
           <p className="text-sm text-dark-500">
@@ -70,9 +68,9 @@ export default function DeveloperGuide() {
 
         <div className="space-y-4">
           <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">proposeTransaction(address to, uint256 value, bytes data)</h3>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">proposeTransaction(address to, uint256 value, bytes data, uint48 expiration, uint32 requestedDelay)</h3>
             <p className="text-base text-dark-300 leading-relaxed mb-2">
-              Proposes a new transaction. Returns the transaction hash. Only callable by owners.
+              Proposes a new transaction. Returns the transaction hash. Only callable by owners. Three overloads: basic (to, value, data), with expiration (to, value, data, expiration), and full (to, value, data, expiration, requestedDelay). Set expiration to 0 for no expiry and requestedDelay to 0 for no additional delay.
             </p>
             <div className="bg-vault-dark-4 rounded p-3 border border-dark-600 font-mono text-xs text-dark-400">
               Returns: bytes32 txHash
@@ -97,7 +95,21 @@ export default function DeveloperGuide() {
           <div>
             <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">cancelTransaction(bytes32 txHash)</h3>
             <p className="text-base text-dark-300 leading-relaxed mb-2">
-              Cancels a pending transaction. Callable by proposer or any owner (if threshold met).
+              Cancels a pending transaction. Only callable by the proposer, and only before the approval threshold has been reached. Once quorum is met (approvedAt is set), the proposer can no longer cancel — use cancelByConsensus instead.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">cancelByConsensus(bytes32 txHash)</h3>
+            <p className="text-base text-dark-300 leading-relaxed mb-2">
+              Cancels an approved transaction via multisig consensus. Only callable as a self-call (through a multisig proposal targeting the vault itself).
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">expireTransaction(bytes32 txHash)</h3>
+            <p className="text-base text-dark-300 leading-relaxed mb-2">
+              Cleans up an expired transaction. Permissionless — callable by anyone after the transaction's expiration timestamp has passed.
             </p>
           </div>
 
@@ -114,6 +126,40 @@ export default function DeveloperGuide() {
             <p className="text-base text-dark-300 leading-relaxed mb-2">
               Revoke a previous approval on a pending transaction. Only callable by owners who have already approved.
             </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">setMinExecutionDelay(uint32 delay)</h3>
+            <p className="text-base text-dark-300 leading-relaxed mb-2">
+              Changes the vault-level minimum execution delay. Only callable as a self-call (through a multisig proposal).
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">signMessage(bytes data)</h3>
+            <p className="text-base text-dark-300 leading-relaxed mb-2">
+              Pre-approves a message hash for EIP-1271 contract signatures. Only callable as a self-call. Returns the message hash.
+            </p>
+            <div className="bg-vault-dark-4 rounded p-3 border border-dark-600 font-mono text-xs text-dark-400">
+              Returns: bytes32 msgHash
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">unsignMessage(bytes data)</h3>
+            <p className="text-base text-dark-300 leading-relaxed mb-2">
+              Revokes a previously signed message. Only callable as a self-call.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">isValidSignature(bytes32 dataHash, bytes signature)</h3>
+            <p className="text-base text-dark-300 leading-relaxed mb-2">
+              EIP-1271 validation. Returns magic value 0x1626ba7e if the message was pre-approved via signMessage, 0xffffffff otherwise. The signature parameter is ignored.
+            </p>
+            <div className="bg-vault-dark-4 rounded p-3 border border-dark-600 font-mono text-xs text-dark-400">
+              Returns: bytes4 magicValue
+            </div>
           </div>
 
           <div>
@@ -192,20 +238,24 @@ export default function DeveloperGuide() {
 
         <div className="space-y-4">
           <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Using ethers.js / quais</h3>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Using quais</h3>
             <div className="bg-vault-dark-4 rounded p-4 border border-dark-600 font-mono text-xs text-dark-300 overflow-x-auto">
-              <pre>{`import { Contract } from 'quais';
+              <pre>{`import { Contract, JsonRpcProvider, parseQuai } from 'quais';
 import QuaiVaultABI from './abis/QuaiVault.json';
 
 const walletAddress = '0x...'; // Your vault address
 const provider = new JsonRpcProvider(RPC_URL);
 const wallet = new Contract(walletAddress, QuaiVaultABI, provider);
 
-// Propose a transaction
+// Propose a transaction with expiration and delay
+const expiration = Math.floor(Date.now() / 1000) + 86400; // 24 hours from now
+const executionDelay = 3600; // 1 hour delay after approval
 const tx = await wallet.proposeTransaction(
   '0x...', // to
-  ethers.parseEther('1.0'), // value
-  '0x' // data
+  parseQuai('1.0'), // value
+  '0x', // data
+  expiration,
+  executionDelay
 );
 
 // Approve a transaction
@@ -230,9 +280,10 @@ const factory = new Contract(
 const owners = ['0x...', '0x...', '0x...'];
 const threshold = 2;
 const salt = '0x...'; // CREATE2 salt mined for valid shard prefix
+const minExecutionDelay = 3600; // 1 hour minimum delay
 
-// Single transaction: deploys vault and initializes it
-const tx = await factory.createWallet(owners, threshold, salt);
+// Deploy with execution delay
+const tx = await factory.createWallet(owners, threshold, salt, minExecutionDelay);
 const receipt = await tx.wait();
 
 // Extract vault address from events
@@ -263,12 +314,36 @@ const vaultAddress = event.args.wallet;`}</pre>
             <p className="text-xs text-dark-400">Emitted when a transaction is executed</p>
           </div>
           <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">TransactionFailed(bytes32 indexed txHash, address indexed executor, bytes returnData)</p>
+            <p className="text-xs text-dark-400">Emitted when a transaction execution fails (external call reverts)</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
             <p className="font-mono text-sm text-primary-400 mb-1">TransactionCancelled(bytes32 indexed txHash, address indexed canceller)</p>
             <p className="text-xs text-dark-400">Emitted when a transaction is cancelled</p>
           </div>
           <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">TransactionExpired(bytes32 indexed txHash)</p>
+            <p className="text-xs text-dark-400">Emitted when an expired transaction is cleaned up</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">ThresholdReached(bytes32 indexed txHash, uint48 approvedAt, uint48 executableAfter)</p>
+            <p className="text-xs text-dark-400">Emitted when a transaction first reaches the approval threshold</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
             <p className="font-mono text-sm text-primary-400 mb-1">ApprovalRevoked(bytes32 indexed txHash, address indexed owner)</p>
             <p className="text-xs text-dark-400">Emitted when an owner revokes their approval</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">MinExecutionDelayChanged(uint32 oldDelay, uint32 newDelay)</p>
+            <p className="text-xs text-dark-400">Emitted when the vault minimum execution delay is changed</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">MessageSigned(bytes32 indexed msgHash, bytes data)</p>
+            <p className="text-xs text-dark-400">Emitted when a message is signed via EIP-1271</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">MessageUnsigned(bytes32 indexed msgHash, bytes data)</p>
+            <p className="text-xs text-dark-400">Emitted when a message signature is revoked</p>
           </div>
           <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
             <p className="font-mono text-sm text-primary-400 mb-1">ModuleEnabled(address indexed module)</p>
@@ -285,6 +360,10 @@ const vaultAddress = event.args.wallet;`}</pre>
           <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
             <p className="font-mono text-sm text-primary-400 mb-1">ExecutionFromModuleFailure(address indexed module)</p>
             <p className="text-xs text-dark-400">Emitted when a module transaction execution fails</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">Received(address indexed sender, uint256 amount)</p>
+            <p className="text-xs text-dark-400">Emitted when the vault receives native QUAI</p>
           </div>
         </div>
       </div>
@@ -314,14 +393,20 @@ const vaultAddress = event.args.wallet;`}</pre>
         <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Error Handling</h2>
         <div className="space-y-3 text-base text-dark-300">
           <p>
-            Common revert reasons:
+            Custom errors:
           </p>
           <ul className="space-y-2 ml-4 list-disc">
-            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">"Not an owner"</code> - Caller is not a vault owner</li>
-            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">"Transaction already exists"</code> - Transaction hash already proposed</li>
-            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">"Already approved"</code> - Owner already approved this transaction</li>
-            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">"Not enough approvals"</code> - Threshold not met</li>
-            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">"Transaction already executed"</code> - Transaction was already executed</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">NotOwner()</code> - Caller is not a vault owner</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">TransactionAlreadyExists()</code> - Transaction hash already proposed</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">AlreadyApproved()</code> - Owner already approved this transaction</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">ThresholdNotMet()</code> - Approval threshold not met</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">AlreadyExecuted()</code> - Transaction was already executed</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">AlreadyCancelled()</code> - Transaction was already cancelled</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">NotProposer()</code> - Only the proposer can cancel pre-approval</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">CannotCancelApprovedTransaction()</code> - Cannot proposer-cancel after threshold reached</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">TimelockNotElapsed()</code> - Execution delay has not passed yet</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">ExpirationTooSoon()</code> - Expiration doesn't allow enough execution window</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">NotExpired()</code> - Transaction has not expired yet</li>
           </ul>
         </div>
       </div>
@@ -336,7 +421,7 @@ const vaultAddress = event.args.wallet;`}</pre>
           <ul className="space-y-2 ml-4 list-disc">
             <li>Use Orchard Testnet for development</li>
             <li>Deploy test vaults using the factory</li>
-            <li>Test all transaction states (pending, approved, executed, cancelled)</li>
+            <li>Test all transaction states (pending, executed, cancelled, expired, failed)</li>
             <li>Test module interactions</li>
             <li>Verify event emissions</li>
           </ul>

@@ -72,8 +72,9 @@ export default function FrontendGuide() {
             </p>
             <ul className="space-y-1 ml-4 list-disc text-base text-dark-300">
               <li>Current balance in QUAI</li>
+              <li>Token balances (ERC-20), NFT holdings (ERC-721), and ERC-1155 holdings</li>
               <li>List of owners and their addresses</li>
-              <li>Current threshold setting</li>
+              <li>Current threshold setting and minimum execution delay</li>
               <li>Pending transactions requiring approval</li>
               <li>Enabled modules</li>
             </ul>
@@ -116,10 +117,16 @@ export default function FrontendGuide() {
                 Click "New Transaction" from the vault detail page or sidebar. Fill in:
               </p>
               <ul className="space-y-1 ml-4 list-disc">
+                <li><strong className="text-dark-200">Transaction Type:</strong> QUAI transfer, ERC-20 token, ERC-721 NFT, ERC-1155, or contract call</li>
                 <li><strong className="text-dark-200">To:</strong> Destination address</li>
                 <li><strong className="text-dark-200">Value:</strong> QUAI amount (optional for contract calls)</li>
                 <li><strong className="text-dark-200">Data:</strong> Contract call data (optional, leave empty for transfers)</li>
               </ul>
+              <p className="mt-2">
+                <strong className="text-dark-200">Advanced Options:</strong> You can optionally set an expiration
+                timestamp (after which the transaction can no longer be executed) and an execution delay (a mandatory
+                waiting period after the approval threshold is reached).
+              </p>
               <p className="mt-2">
                 Click "Propose Transaction" and approve the transaction in your wallet. The proposal will
                 appear in the pending transactions list.
@@ -168,14 +175,27 @@ export default function FrontendGuide() {
             <h3 className="text-base font-display font-bold text-dark-200 mb-2">4. Cancelling Transactions</h3>
             <div className="space-y-2 text-base text-dark-300">
               <p>
-                Transactions can be cancelled by:
+                Transactions can be cancelled in two ways:
               </p>
               <ul className="space-y-1 ml-4 list-disc">
-                <li>The proposer (at any time)</li>
-                <li>Any owner (if threshold approvals have been reached)</li>
+                <li><strong className="text-dark-200">Proposer cancel:</strong> The proposer can cancel their transaction at any time before the approval threshold is first reached</li>
+                <li><strong className="text-dark-200">Consensus cancel:</strong> After the threshold has been reached, cancellation requires a separate multisig self-call transaction (propose a cancel, gather approvals, execute)</li>
               </ul>
               <p className="mt-2">
-                Click "Cancel" on a pending transaction to cancel it. Cancelled transactions cannot be executed.
+                Click "Cancel" on a pending transaction. If you are the proposer and the threshold has not been
+                reached, the cancel happens directly. Otherwise, the interface will guide you through the
+                consensus cancel flow. Cancelled transactions cannot be executed.
+              </p>
+            </div>
+          </div>
+
+          <div className="border-l-4 border-primary-500 pl-4">
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">5. Expiring Transactions</h3>
+            <div className="space-y-2 text-base text-dark-300">
+              <p>
+                Transactions with an expiration timestamp cannot be executed after the expiry passes.
+                An "Expire" button appears on eligible transactions, and anyone can trigger the cleanup —
+                expiration is permissionless. Expired transactions must be re-proposed if still needed.
               </p>
             </div>
           </div>
@@ -194,8 +214,7 @@ export default function FrontendGuide() {
             </p>
             <ul className="space-y-1 ml-4 list-disc">
               <li>Social Recovery Module</li>
-              <li>Daily Limit Module</li>
-              <li>Whitelist Module</li>
+              <li>Any Zodiac-compatible modules deployed to the network</li>
             </ul>
             <p className="mt-2">
               Click "Enable" next to a module and approve the transaction. Once enabled, configure the
@@ -210,8 +229,6 @@ export default function FrontendGuide() {
             </p>
             <ul className="space-y-1 ml-4 list-disc">
               <li><strong className="text-dark-200">Social Recovery:</strong> Set guardians, threshold, and recovery period</li>
-              <li><strong className="text-dark-200">Daily Limit:</strong> Set daily spending limit</li>
-              <li><strong className="text-dark-200">Whitelist:</strong> Add or remove whitelisted addresses</li>
             </ul>
           </div>
 
@@ -235,7 +252,7 @@ export default function FrontendGuide() {
           <ul className="space-y-1 ml-4 list-disc">
             <li>All proposed transactions</li>
             <li>Approval status and counts</li>
-            <li>Execution status</li>
+            <li>Transaction status (pending, executed, cancelled, expired, or failed)</li>
             <li>Transaction hashes for on-chain verification</li>
             <li>Module bypass executions -- transactions executed directly via an enabled module without going through the multisig approval flow</li>
           </ul>
@@ -243,6 +260,22 @@ export default function FrontendGuide() {
             Use the transaction lookup feature to find specific transactions by hash or view detailed
             information about any transaction.
           </p>
+        </div>
+      </div>
+
+      {/* Token Management */}
+      <div className="vault-panel p-6 mb-6">
+        <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Token Management</h2>
+        <div className="space-y-3 text-base text-dark-300 leading-relaxed">
+          <p>
+            Quai Vault natively supports holding and sending ERC-20 tokens, ERC-721 NFTs, and ERC-1155 multi-tokens.
+          </p>
+          <ul className="space-y-1 ml-4 list-disc">
+            <li><strong className="text-dark-200">Token Balances:</strong> ERC-20 holdings are displayed on the vault detail page with token metadata auto-discovered by the indexer</li>
+            <li><strong className="text-dark-200">NFT Holdings:</strong> ERC-721 NFTs owned by the vault are listed with collection and token ID information</li>
+            <li><strong className="text-dark-200">ERC-1155 Holdings:</strong> Multi-token balances are tracked and displayed</li>
+            <li><strong className="text-dark-200">Sending Tokens:</strong> Use the transaction type selector when proposing a new transaction to choose the token type you want to send</li>
+          </ul>
         </div>
       </div>
 
@@ -263,9 +296,9 @@ export default function FrontendGuide() {
             <h3 className="font-semibold text-dark-200 mb-2">Real-time Updates</h3>
             <p className="text-dark-400 leading-relaxed">
               Real-time Supabase subscriptions provide instant updates for transaction statuses,
-              approval counts, and balances. Everything updates automatically as events happen
-              on-chain. If the real-time connection is interrupted, the interface falls back to
-              polling seamlessly so you never miss an update.
+              approval counts, and balances. The Supabase indexer is the primary data source
+              for the frontend, powering all read operations while write operations go directly
+              to the blockchain via RPC.
             </p>
           </div>
 
