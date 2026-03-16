@@ -226,11 +226,12 @@ export default function MultisigWallets() {
           </div>
 
           <div className="border-l-4 border-primary-500 pl-4">
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Self-Calls (Owner Management)</h3>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Self-Calls (Vault Administration)</h3>
             <p className="text-base text-dark-300 leading-relaxed mb-2">
               Manage the vault itself by calling internal functions. This includes adding/removing owners,
-              changing the threshold, and enabling/disabling modules. These are special transactions that
-              call the vault contract itself.
+              changing the threshold, enabling/disabling modules, toggling DelegateCall permissions, and
+              adjusting the minimum execution delay. These are special transactions that call the vault
+              contract itself and execute immediately without timelock delays.
             </p>
             <div className="doc-note">
               <p className="text-xs font-mono doc-note-text">Example: Add a new owner address</p>
@@ -280,20 +281,25 @@ export default function MultisigWallets() {
           <div>
             <h3 className="font-semibold text-dark-200 mb-2">Vault-Level Minimum Delay</h3>
             <p className="text-dark-400 leading-relaxed">
-              When creating a vault, you can set
+              When creating a vault, you can optionally set
               a <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">minExecutionDelay</code> (in
               seconds). This enforces a floor on all external transactions — even if threshold is met instantly,
-              the transaction cannot execute until the delay elapses. Self-calls (owner management, threshold
-              changes) bypass this delay for incident response. The delay can be changed later via a multisig
-              self-call.
+              the transaction cannot execute until the delay elapses. The default
+              is <strong className="text-dark-200">0</strong> (no timelock — simple quorum mode). The maximum
+              allowed value is <strong className="text-dark-200">30 days</strong> (2,592,000 seconds) to prevent
+              accidental wallet bricking. Self-calls (owner management, threshold changes) always bypass this
+              delay for incident response. The delay can be changed later via a multisig self-call.
             </p>
           </div>
           <div>
             <h3 className="font-semibold text-dark-200 mb-2">Per-Transaction Execution Delay</h3>
             <p className="text-dark-400 leading-relaxed">
-              When proposing a transaction, owners can request an additional execution delay beyond the vault
-              minimum. The effective delay is the maximum of the vault minimum and the requested delay. The
-              countdown begins when the approval threshold is first reached — the <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">approvedAt</code> timestamp
+              When proposing a transaction, owners can request an execution delay via
+              the <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">requestedDelay</code> parameter.
+              The effective delay is calculated
+              as: <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">effectiveDelay = max(requestedDelay, minExecutionDelay)</code> —
+              the vault minimum always acts as a floor. The delay is locked into the transaction at proposal time.
+              The countdown begins when the approval threshold is first reached — the <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">approvedAt</code> timestamp
               is set once and never cleared, preventing clock-gaming attacks.
             </p>
           </div>
@@ -303,8 +309,10 @@ export default function MultisigWallets() {
               Transactions can optionally include an expiration timestamp. After expiry, the transaction cannot
               be executed and anyone can
               call <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">expireTransaction()</code> for
-              cleanup. The contract validates that expiration allows at least one execution window after the
-              timelock completes.
+              cleanup. The contract validates that the expiration timestamp is far enough in the future to allow at
+              least one execution window after the timelock elapses — specifically, <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">expiration {'>'} block.timestamp + effectiveDelay</code>.
+              If the expiration is too soon, the proposal reverts
+              with <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">ExpirationTooSoon</code>.
             </p>
           </div>
         </div>
@@ -337,6 +345,33 @@ export default function MultisigWallets() {
             The frontend displays token balances, NFT holdings, and ERC-1155 inventory in dedicated panels
             on the vault detail page. Token metadata is automatically discovered by the indexer.
           </p>
+        </div>
+      </div>
+
+      {/* Vault Settings */}
+      <div className="vault-panel p-6 mb-6">
+        <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Vault Settings</h2>
+        <div className="space-y-4 text-base text-dark-300 leading-relaxed">
+          <p>
+            Each vault has configurable settings that can be changed via multisig self-calls:
+          </p>
+          <ul className="space-y-2 ml-4 list-disc">
+            <li>
+              <strong className="text-dark-200">Threshold:</strong> The number of owner approvals required to execute transactions.
+            </li>
+            <li>
+              <strong className="text-dark-200">Minimum Execution Delay:</strong> A vault-level floor on how long external transactions
+              must wait after reaching quorum before they can be executed. Defaults
+              to <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">0</code> (no delay).
+              Maximum: <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">30 days</code> (2,592,000 seconds).
+            </li>
+            <li>
+              <strong className="text-dark-200">DelegateCall Disabled:</strong> Controls whether modules can execute via DelegateCall.
+              Defaults to <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">true</code> (blocked) for
+              security. Must be set to <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">false</code> if
+              you need MultiSend batching or other DelegateCall-dependent module functionality.
+            </li>
+          </ul>
         </div>
       </div>
 

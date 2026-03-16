@@ -157,6 +157,20 @@ export default function Security() {
               partial admin state changes are unacceptable.
             </p>
           </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">DelegateCall Hardening (CR-1)</h3>
+            <p className="text-base text-dark-300 leading-relaxed">
+              DelegateCall allows a module to execute code in the context of the vault, with full access to storage and
+              funds. This is the same attack vector used in the Bybit hack, where a malicious module overwrote wallet
+              storage via DelegateCall. Quai Vault mitigates this with a configurable <code className="text-primary-400">delegatecallDisabled</code> flag
+              that defaults to <strong className="text-dark-200">true</strong>. When enabled, all module executions
+              requesting <code className="text-primary-400">Enum.Operation.DelegateCall</code> are rejected. This can be
+              toggled at deployment or later via a multisig self-call
+              (<code className="text-primary-400">setDelegatecallDisabled(bool)</code>). If you need MultiSend batching,
+              you must explicitly opt in by setting this flag to false — but only do so with trusted, audited modules.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -217,8 +231,9 @@ export default function Security() {
             <h3 className="text-base font-semibold doc-callout-yellow-text mb-2">Testnet Deployment</h3>
             <p className="text-sm doc-callout-yellow-text">
               Quai Vault is currently deployed on Orchard Testnet for engineering testing.
-              <strong> Do not store significant funds.</strong> Mainnet deployment will follow after
-              comprehensive testing and security audits.
+              <strong> Do not store significant funds.</strong> The contracts have undergone 5 rounds of AI-assisted
+              security audits using Claude Opus 4.6, with the final round producing 0 Critical, 0 High, and
+              0 Medium findings. A formal third-party audit is planned before mainnet deployment.
             </p>
           </div>
 
@@ -233,10 +248,12 @@ export default function Security() {
           <div>
             <h3 className="text-base font-display font-bold text-dark-200 mb-2">DelegateCall Risks</h3>
             <p className="leading-relaxed">
-              Enabled modules can execute arbitrary code in the context of the wallet
-              via <code className="text-primary-400">delegatecall</code>. This means a malicious or buggy module has
-              full access to the vault's storage and funds. Only enable modules that have been reviewed and are trusted.
-              Module enabling and disabling is gated by multisig approval to mitigate this risk.
+              DelegateCall allows modules to execute code in the context of the wallet, with full access to storage and
+              funds. <strong className="text-dark-200">By default, DelegateCall is disabled</strong> — the <code className="text-primary-400">delegatecallDisabled</code> flag
+              is set to <code className="text-primary-400">true</code> at deployment, blocking all DelegateCall operations from
+              modules. If you need MultiSend batching or other DelegateCall-dependent functionality, you must explicitly
+              opt in via a multisig self-call. Only enable DelegateCall with trusted, audited modules. Module enabling and
+              disabling is always gated by multisig approval.
             </p>
           </div>
         </div>
@@ -272,6 +289,19 @@ export default function Security() {
           </div>
 
           <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Malicious Module via DelegateCall</h3>
+            <p className="leading-relaxed">
+              <strong className="text-dark-200">Risk:</strong> A module executing via DelegateCall could overwrite
+              vault storage or drain funds (the attack vector used in the Bybit hack).
+            </p>
+            <p className="leading-relaxed mt-2">
+              <strong className="text-dark-200">Mitigation:</strong> DelegateCall is disabled by default
+              (<code className="text-primary-400">delegatecallDisabled = true</code>). Only enable it via multisig
+              consensus when needed, and only with thoroughly reviewed modules.
+            </p>
+          </div>
+
+          <div>
             <h3 className="text-base font-display font-bold text-dark-200 mb-2">Social Engineering</h3>
             <p className="leading-relaxed">
               <strong className="text-dark-200">Risk:</strong> Attackers may try to trick owners into approving
@@ -282,6 +312,42 @@ export default function Security() {
               transaction decoding, and establish clear approval processes.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Audit Status */}
+      <div className="vault-panel p-6 mb-6">
+        <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Audit Status</h2>
+        <div className="space-y-3 text-base text-dark-300 leading-relaxed">
+          <p>
+            Quai Vault has completed <strong className="text-dark-200">5 rounds of AI-assisted security audits</strong> using
+            Claude Opus 4.6. Each round covered different aspects of the contract system including the core
+            multisig logic, module system, timelock mechanics, token receivers, and the DelegateCall hardening (CR-1) feature.
+          </p>
+          <div className="bg-vault-dark-4 rounded p-4 border border-dark-600">
+            <p className="font-mono text-sm text-dark-200 mb-2">Final Audit Results:</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div className="text-center">
+                <span className="block text-lg font-bold text-green-400">0</span>
+                <span className="text-dark-500">Critical</span>
+              </div>
+              <div className="text-center">
+                <span className="block text-lg font-bold text-green-400">0</span>
+                <span className="text-dark-500">High</span>
+              </div>
+              <div className="text-center">
+                <span className="block text-lg font-bold text-green-400">0</span>
+                <span className="text-dark-500">Medium</span>
+              </div>
+              <div className="text-center">
+                <span className="block text-lg font-bold text-yellow-400">3</span>
+                <span className="text-dark-500">Low</span>
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-dark-500">
+            All code is open source. A formal third-party audit is planned before mainnet deployment.
+          </p>
         </div>
       </div>
 

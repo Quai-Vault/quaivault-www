@@ -32,6 +32,15 @@ export default function Modules() {
             The Social Recovery Module is the built-in module provided by Quai Vault, but the module system
             is open and extensible.
           </p>
+          <div className="doc-callout-yellow mt-2">
+            <p className="text-sm doc-callout-yellow-text">
+              <strong>DelegateCall is disabled by default.</strong> Modules execute via <code>Call</code> only.
+              If a module requests <code>DelegateCall</code> (e.g., MultiSend for batched transactions), the
+              vault will reject it unless <code>delegatecallDisabled</code> has been set to <code>false</code> via
+              a multisig self-call. This protects against storage corruption attacks where a malicious module
+              could overwrite vault state.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -145,8 +154,17 @@ export default function Modules() {
               <li><strong className="text-dark-200">Zodiac Roles:</strong> Granular permission system for different roles</li>
               <li><strong className="text-dark-200">Zodiac Scope:</strong> Restrict which functions a module can call</li>
               <li><strong className="text-dark-200">Snapshot + SafeSnap:</strong> Execute on-chain proposals from Snapshot governance votes</li>
+              <li><strong className="text-dark-200">MultiSend:</strong> Batch multiple transactions into a single execution (requires DelegateCall enabled)</li>
               <li><strong className="text-dark-200">Custom Modules:</strong> Build your own modules using the IAvatar interface</li>
             </ul>
+            <div className="doc-note mt-3">
+              <p className="text-sm doc-note-text font-mono mb-1">MultiSend & DelegateCall:</p>
+              <p className="text-sm doc-note-text">
+                MultiSend uses DelegateCall to execute batched transactions in the vault's context.
+                To use MultiSend, you must first enable DelegateCall on your vault by calling <code>setDelegatecallDisabled(false)</code> via
+                a multisig self-call. Only do this if you trust all enabled modules.
+              </p>
+            </div>
           </div>
 
           <div>

@@ -74,7 +74,7 @@ export default function FrontendGuide() {
               <li>Current balance in QUAI</li>
               <li>Token balances (ERC-20), NFT holdings (ERC-721), and ERC-1155 holdings</li>
               <li>List of owners and their addresses</li>
-              <li>Current threshold setting and minimum execution delay</li>
+              <li>Current threshold setting, minimum execution delay, and DelegateCall status</li>
               <li>Pending transactions requiring approval</li>
               <li>Enabled modules</li>
             </ul>
@@ -229,6 +229,7 @@ export default function FrontendGuide() {
             </p>
             <ul className="space-y-1 ml-4 list-disc">
               <li><strong className="text-dark-200">Social Recovery:</strong> Set guardians, threshold, and recovery period</li>
+              <li><strong className="text-dark-200">Vault Settings:</strong> Toggle DelegateCall permissions (disabled by default for security; enable only if you need MultiSend batching)</li>
             </ul>
           </div>
 

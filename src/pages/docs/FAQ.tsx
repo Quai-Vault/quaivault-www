@@ -42,11 +42,11 @@ export default function FAQ() {
     },
     {
       question: "Is Quai Vault audited?",
-      answer: "The contracts are currently on testnet and pre-audit. A formal security audit is planned before mainnet deployment. All code is open source for review."
+      answer: "The contracts have undergone 5 rounds of AI-assisted security audits using Claude Opus 4.6. The final audit round produced 0 Critical, 0 High, and 0 Medium findings (3 Low, 7 Informational). All code is open source for review. A formal third-party audit is planned before mainnet deployment."
     },
     {
       question: "Can I use this on mainnet?",
-      answer: "Currently, Quai Vault is deployed on Orchard Testnet only. Do not store significant funds. Mainnet deployment will follow testing and audits."
+      answer: "Currently, Quai Vault is deployed on Orchard Testnet only. Do not store significant funds. Mainnet deployment will follow a formal third-party audit."
     },
     {
       question: "What happens if a recovery doesn't execute automatically?",
@@ -79,6 +79,14 @@ export default function FAQ() {
     {
       question: "What does a 'failed' transaction mean?",
       answer: "A failed transaction means the external call was attempted but reverted on-chain. Failed transactions are terminal — they cannot be retried or re-executed. You must propose a new transaction if you want to try again. This design prevents attackers from keeping transactions permanently stuck in a retryable state."
+    },
+    {
+      question: "What is DelegateCall and why is it disabled by default?",
+      answer: "DelegateCall allows a module to execute code in the context of your vault, with full access to storage and funds. This is a powerful but dangerous capability — it's the same attack vector used in the Bybit hack. Quai Vault disables DelegateCall by default (delegatecallDisabled = true) to protect against storage corruption attacks from malicious modules. You can enable it via a multisig self-call if you need MultiSend batching, but only do so with trusted, audited modules."
+    },
+    {
+      question: "How do I enable MultiSend batching?",
+      answer: "MultiSend uses DelegateCall to execute batched transactions. Since DelegateCall is disabled by default, you need to first propose a multisig self-call to setDelegatecallDisabled(false), gather threshold approvals, and execute it. After that, modules can use DelegateCall for batched operations. Only enable this if you trust all enabled modules on your vault."
     }
   ];
 

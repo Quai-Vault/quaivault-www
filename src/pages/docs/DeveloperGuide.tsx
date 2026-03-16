@@ -50,10 +50,10 @@ export default function DeveloperGuide() {
           </p>
           <div className="bg-vault-dark-4 rounded p-4 border border-dark-600 font-mono text-sm overflow-x-auto">
             <div className="space-y-2 text-dark-300">
-              <div><span className="text-dark-500">QUAIVAULT:</span> <span className="text-primary-400">0x0044AbC8bdAaD4D482eDB22E1B946ACAaB2460C5</span></div>
-              <div><span className="text-dark-500">QUAIVAULT_FACTORY:</span> <span className="text-primary-400">0x00475fA887b961E04Cddd6202D49a3949f2d45D7</span></div>
-              <div><span className="text-dark-500">SOCIAL_RECOVERY_MODULE:</span> <span className="text-primary-400">0x003Ee41F8fFacFCf54119B9cf223ab4CB65ebdF0</span></div>
-              <div><span className="text-dark-500">MULTISEND:</span> <span className="text-primary-400">0x002BDFaA9e74022B44035995172B030Ead6aA6Bd</span></div>
+              <div><span className="text-dark-500">QUAIVAULT:</span> <span className="text-primary-400">0x0006bFD36432079e4E813E383A8FD60f7a131388</span></div>
+              <div><span className="text-dark-500">QUAIVAULT_FACTORY:</span> <span className="text-primary-400">0x00613Bd358C36Bed84bf64A9F1bC632d3125779b</span></div>
+              <div><span className="text-dark-500">SOCIAL_RECOVERY_MODULE:</span> <span className="text-primary-400">0x000a01324137F3DC737017479e7c61F87b90d217</span></div>
+              <div><span className="text-dark-500">MULTISEND:</span> <span className="text-primary-400">0x00465B948541CE357ea54BD3C3d8B9995097d199</span></div>
             </div>
           </div>
           <p className="text-sm text-dark-500">
@@ -131,7 +131,14 @@ export default function DeveloperGuide() {
           <div>
             <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">setMinExecutionDelay(uint32 delay)</h3>
             <p className="text-base text-dark-300 leading-relaxed mb-2">
-              Changes the vault-level minimum execution delay. Only callable as a self-call (through a multisig proposal).
+              Changes the vault-level minimum execution delay. Accepts values from 0 (no delay) up to 30 days (2,592,000 seconds). Reverts with <code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">ExecutionDelayTooLong()</code> if the value exceeds the maximum. Only callable as a self-call (through a multisig proposal).
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">setDelegatecallDisabled(bool disabled)</h3>
+            <p className="text-base text-dark-300 leading-relaxed mb-2">
+              Enables or disables DelegateCall for module executions. When disabled (the default), modules can only execute via Call, preventing storage corruption attacks. Only callable as a self-call (through a multisig proposal). Must be enabled if MultiSend batching is needed.
             </p>
           </div>
 
@@ -281,9 +288,12 @@ const owners = ['0x...', '0x...', '0x...'];
 const threshold = 2;
 const salt = '0x...'; // CREATE2 salt mined for valid shard prefix
 const minExecutionDelay = 3600; // 1 hour minimum delay
+const delegatecallDisabled = true; // Block module DelegateCall (default, recommended)
 
-// Deploy with execution delay
-const tx = await factory.createWallet(owners, threshold, salt, minExecutionDelay);
+// Deploy with execution delay and DelegateCall setting
+const tx = await factory.createWallet(
+  owners, threshold, salt, minExecutionDelay, delegatecallDisabled
+);
 const receipt = await tx.wait();
 
 // Extract vault address from events
@@ -365,6 +375,22 @@ const vaultAddress = event.args.wallet;`}</pre>
             <p className="font-mono text-sm text-primary-400 mb-1">Received(address indexed sender, uint256 amount)</p>
             <p className="text-xs text-dark-400">Emitted when the vault receives native QUAI</p>
           </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">OwnerAdded(address indexed owner)</p>
+            <p className="text-xs text-dark-400">Emitted when an owner is added to the vault</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">OwnerRemoved(address indexed owner)</p>
+            <p className="text-xs text-dark-400">Emitted when an owner is removed from the vault</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">ThresholdChanged(uint256 oldThreshold, uint256 newThreshold)</p>
+            <p className="text-xs text-dark-400">Emitted when the approval threshold is changed</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">DelegatecallDisabledChanged(bool disabled)</p>
+            <p className="text-xs text-dark-400">Emitted when the DelegateCall setting is changed</p>
+          </div>
         </div>
       </div>
 
@@ -407,6 +433,9 @@ const vaultAddress = event.args.wallet;`}</pre>
             <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">TimelockNotElapsed()</code> - Execution delay has not passed yet</li>
             <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">ExpirationTooSoon()</code> - Expiration doesn't allow enough execution window</li>
             <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">NotExpired()</code> - Transaction has not expired yet</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">DelegatecallDisabled()</code> - DelegateCall is disabled on this vault</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">ExecutionDelayTooLong()</code> - minExecutionDelay exceeds 30-day maximum</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">ExpirationTooSoon(uint256 minimumExpiration)</code> - Expiration does not allow enough time after timelock elapses</li>
           </ul>
         </div>
       </div>

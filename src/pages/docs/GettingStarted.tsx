@@ -118,6 +118,11 @@ export default function GettingStarted() {
                   <strong className="text-dark-200">Threshold:</strong> Set how many owner approvals are required
                   to execute transactions. This must be between 1 and the number of owners.
                 </li>
+                <li>
+                  <strong className="text-dark-200">DelegateCall:</strong> DelegateCall is disabled by default for
+                  security. If you plan to use MultiSend batching, you can enable it at deployment or later via a
+                  multisig self-call. Most users should leave this disabled.
+                </li>
               </ul>
               <div className="doc-callout-blue mt-3">
                 <p className="text-sm doc-callout-blue-text">
@@ -158,8 +163,11 @@ export default function GettingStarted() {
                     <p className="font-semibold text-dark-200 mb-1">Single Transaction Deployment</p>
                     <p className="text-dark-400">
                       Once a valid salt is found, you approve a single transaction that
-                      calls <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">Factory.createWallet(owners, threshold, salt)</code>.
-                      This deploys your vault contract and initializes it with your owners and threshold in one atomic operation.
+                      calls the factory's <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">createWallet</code> function.
+                      The simplest form is <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">createWallet(owners, threshold, salt)</code> which
+                      deploys with no execution delay and DelegateCall disabled. You can also specify an
+                      optional <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">minExecutionDelay</code> (0
+                      to 30 days) to enforce a timelock on all external transactions after they reach quorum.
                     </p>
                   </div>
                 </div>
