@@ -34,11 +34,13 @@ export default function Modules() {
           </p>
           <div className="doc-callout-yellow mt-2">
             <p className="text-sm doc-callout-yellow-text">
-              <strong>DelegateCall is disabled by default.</strong> Modules execute via <code>Call</code> only.
-              If a module requests <code>DelegateCall</code> (e.g., MultiSend for batched transactions), the
-              vault will reject it unless <code>delegatecallDisabled</code> has been set to <code>false</code> via
-              a multisig self-call. This protects against storage corruption attacks where a malicious module
-              could overwrite vault state.
+              <strong>DelegateCall whitelist is empty by default.</strong> Modules execute via <code>Call</code> only.
+              If a module requests <code>DelegateCall</code>, the vault checks
+              the <code>delegatecallAllowed</code> whitelist — if the target is not whitelisted, the call reverts
+              with <code>DelegateCallNotAllowed(target)</code>. To allow DelegateCall to a specific contract
+              (e.g., MultiSendCallOnly for batching), add it via
+              an <code>addDelegatecallTarget(address)</code> multisig self-call. Unlike a global toggle, the whitelist
+              gives per-target granularity — you can allow one contract without opening DelegateCall to all.
             </p>
           </div>
         </div>
@@ -154,15 +156,18 @@ export default function Modules() {
               <li><strong className="text-dark-200">Zodiac Roles:</strong> Granular permission system for different roles</li>
               <li><strong className="text-dark-200">Zodiac Scope:</strong> Restrict which functions a module can call</li>
               <li><strong className="text-dark-200">Snapshot + SafeSnap:</strong> Execute on-chain proposals from Snapshot governance votes</li>
-              <li><strong className="text-dark-200">MultiSend:</strong> Batch multiple transactions into a single execution (requires DelegateCall enabled)</li>
+              <li><strong className="text-dark-200">MultiSendCallOnly:</strong> Batch multiple transactions into a single execution (requires DelegateCall whitelist entry)</li>
               <li><strong className="text-dark-200">Custom Modules:</strong> Build your own modules using the IAvatar interface</li>
             </ul>
             <div className="doc-note mt-3">
-              <p className="text-sm doc-note-text font-mono mb-1">MultiSend & DelegateCall:</p>
+              <p className="text-sm doc-note-text font-mono mb-1">MultiSendCallOnly & DelegateCall Whitelist:</p>
               <p className="text-sm doc-note-text">
-                MultiSend uses DelegateCall to execute batched transactions in the vault's context.
-                To use MultiSend, you must first enable DelegateCall on your vault by calling <code>setDelegatecallDisabled(false)</code> via
-                a multisig self-call. Only do this if you trust all enabled modules.
+                MultiSendCallOnly uses DelegateCall to execute batched transactions in the vault's context, but
+                blocks nested DelegateCall within batches for safety. To use it, add MultiSendCallOnly's contract
+                address to the DelegateCall whitelist via
+                an <code>addDelegatecallTarget(multiSendCallOnlyAddress)</code> multisig self-call — or include it
+                in <code>initialDelegatecallTargets</code> at deployment. Only whitelisted targets can be called
+                via DelegateCall, so adding MultiSendCallOnly does not open DelegateCall to other contracts.
               </p>
             </div>
           </div>
@@ -201,6 +206,18 @@ export default function Modules() {
             removes its functionality but doesn't affect existing configurations (they'll be restored if you
             re-enable the module).
           </p>
+
+          <div className="doc-note mt-4">
+            <p className="text-sm doc-note-text font-mono mb-1">Modules at Launch (Integrators):</p>
+            <p className="text-sm doc-note-text">
+              Integrators building deployment flows (e.g., DAO summoners) can pre-enable modules at vault
+              creation time using the factory's 5-param or
+              6-param <code>createWallet</code> overloads. Pass an <code>initialModules</code> array to atomically
+              deploy the vault with modules already enabled — and
+              optionally <code>initialDelegatecallTargets</code> to pre-populate the DelegateCall whitelist. This
+              enables single-transaction vault+module deployment for summoner patterns.
+            </p>
+          </div>
         </div>
       </div>
 

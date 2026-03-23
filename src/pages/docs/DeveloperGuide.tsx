@@ -53,7 +53,7 @@ export default function DeveloperGuide() {
               <div><span className="text-dark-500">QUAIVAULT:</span> <span className="text-primary-400">0x0006bFD36432079e4E813E383A8FD60f7a131388</span></div>
               <div><span className="text-dark-500">QUAIVAULT_FACTORY:</span> <span className="text-primary-400">0x00613Bd358C36Bed84bf64A9F1bC632d3125779b</span></div>
               <div><span className="text-dark-500">SOCIAL_RECOVERY_MODULE:</span> <span className="text-primary-400">0x000a01324137F3DC737017479e7c61F87b90d217</span></div>
-              <div><span className="text-dark-500">MULTISEND:</span> <span className="text-primary-400">0x00465B948541CE357ea54BD3C3d8B9995097d199</span></div>
+              <div><span className="text-dark-500">MULTISEND_CALL_ONLY:</span> <span className="text-primary-400">0x00465B948541CE357ea54BD3C3d8B9995097d199</span></div>
             </div>
           </div>
           <p className="text-sm text-dark-500">
@@ -136,9 +136,16 @@ export default function DeveloperGuide() {
           </div>
 
           <div>
-            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">setDelegatecallDisabled(bool disabled)</h3>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">addDelegatecallTarget(address target)</h3>
             <p className="text-base text-dark-300 leading-relaxed mb-2">
-              Enables or disables DelegateCall for module executions. When disabled (the default), modules can only execute via Call, preventing storage corruption attacks. Only callable as a self-call (through a multisig proposal). Must be enabled if MultiSend batching is needed.
+              Adds an address to the DelegateCall whitelist. Once whitelisted, modules can execute DelegateCall to this target. Only callable as a self-call (through a multisig proposal). Reverts with <code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">DelegatecallTargetAlreadyAllowed(target)</code> if the address is already on the whitelist.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2 font-mono">removeDelegatecallTarget(address target)</h3>
+            <p className="text-base text-dark-300 leading-relaxed mb-2">
+              Removes an address from the DelegateCall whitelist. Only callable as a self-call (through a multisig proposal). Reverts with <code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">DelegatecallTargetNotAllowed(target)</code> if the address is not on the whitelist.
             </p>
           </div>
 
@@ -288,12 +295,25 @@ const owners = ['0x...', '0x...', '0x...'];
 const threshold = 2;
 const salt = '0x...'; // CREATE2 salt mined for valid shard prefix
 const minExecutionDelay = 3600; // 1 hour minimum delay
-const delegatecallDisabled = true; // Block module DelegateCall (default, recommended)
 
-// Deploy with execution delay and DelegateCall setting
+// Factory overloads (simplest to most configurable):
+// 3-param: createWallet(owners, threshold, salt)
+// 4-param: createWallet(owners, threshold, salt, minExecutionDelay)
+// 5-param: createWallet(owners, threshold, salt, minExecutionDelay, initialModules)
+// 6-param: createWallet(owners, threshold, salt, minExecutionDelay, initialModules, initialDelegatecallTargets)
+
+// Simple deployment (no modules, empty DelegateCall whitelist)
 const tx = await factory.createWallet(
-  owners, threshold, salt, minExecutionDelay, delegatecallDisabled
+  owners, threshold, salt, minExecutionDelay
 );
+
+// Integrator deployment (e.g., DAO summoner pattern):
+// Pre-enable modules and whitelist DelegateCall targets atomically
+// const initialModules = ['0xBaalAddress...'];
+// const initialDelegatecallTargets = ['0xMultiSendCallOnlyAddress...'];
+// const tx = await factory.createWallet(
+//   owners, threshold, salt, minExecutionDelay, initialModules, initialDelegatecallTargets
+// );
 const receipt = await tx.wait();
 
 // Extract vault address from events
@@ -388,8 +408,12 @@ const vaultAddress = event.args.wallet;`}</pre>
             <p className="text-xs text-dark-400">Emitted when the approval threshold is changed</p>
           </div>
           <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
-            <p className="font-mono text-sm text-primary-400 mb-1">DelegatecallDisabledChanged(bool disabled)</p>
-            <p className="text-xs text-dark-400">Emitted when the DelegateCall setting is changed</p>
+            <p className="font-mono text-sm text-primary-400 mb-1">DelegatecallTargetAdded(address indexed target)</p>
+            <p className="text-xs text-dark-400">Emitted when an address is added to the DelegateCall whitelist</p>
+          </div>
+          <div className="bg-vault-dark-4 rounded p-3 border border-dark-600">
+            <p className="font-mono text-sm text-primary-400 mb-1">DelegatecallTargetRemoved(address indexed target)</p>
+            <p className="text-xs text-dark-400">Emitted when an address is removed from the DelegateCall whitelist</p>
           </div>
         </div>
       </div>
@@ -433,7 +457,9 @@ const vaultAddress = event.args.wallet;`}</pre>
             <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">TimelockNotElapsed()</code> - Execution delay has not passed yet</li>
             <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">ExpirationTooSoon()</code> - Expiration doesn't allow enough execution window</li>
             <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">NotExpired()</code> - Transaction has not expired yet</li>
-            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">DelegatecallDisabled()</code> - DelegateCall is disabled on this vault</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">DelegateCallNotAllowed(address target)</code> - DelegateCall attempted to a non-whitelisted target</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">DelegatecallTargetAlreadyAllowed(address target)</code> - Target is already on the DelegateCall whitelist</li>
+            <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">DelegatecallTargetNotAllowed(address target)</code> - Target is not on the DelegateCall whitelist</li>
             <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">ExecutionDelayTooLong()</code> - minExecutionDelay exceeds 30-day maximum</li>
             <li><code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-sm">ExpirationTooSoon(uint256 minimumExpiration)</code> - Expiration does not allow enough time after timelock elapses</li>
           </ul>

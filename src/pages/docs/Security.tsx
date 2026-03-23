@@ -160,15 +160,29 @@ export default function Security() {
 
           <div>
             <h3 className="text-base font-display font-bold text-dark-200 mb-2">DelegateCall Hardening (CR-1)</h3>
-            <p className="text-base text-dark-300 leading-relaxed">
+            <p className="text-base text-dark-300 leading-relaxed mb-3">
               DelegateCall allows a module to execute code in the context of the vault, with full access to storage and
-              funds. This is the same attack vector used in the Bybit hack, where a malicious module overwrote wallet
-              storage via DelegateCall. Quai Vault mitigates this with a configurable <code className="text-primary-400">delegatecallDisabled</code> flag
-              that defaults to <strong className="text-dark-200">true</strong>. When enabled, all module executions
-              requesting <code className="text-primary-400">Enum.Operation.DelegateCall</code> are rejected. This can be
-              toggled at deployment or later via a multisig self-call
-              (<code className="text-primary-400">setDelegatecallDisabled(bool)</code>). If you need MultiSend batching,
-              you must explicitly opt in by setting this flag to false — but only do so with trusted, audited modules.
+              funds. This is the same attack vector used in the <strong className="text-dark-200">$1.46B Bybit hack (Feb 2025)</strong>,
+              where a malicious module overwrote Safe wallet storage via DelegateCall.
+            </p>
+            <p className="text-base text-dark-300 leading-relaxed mb-3">
+              Most multisig wallets (including Safe) mitigate this with a global boolean toggle — DelegateCall is either
+              fully enabled or fully disabled. This is too blunt: once enabled for one use case (e.g., MultiSend batching),
+              it opens DelegateCall to <em>every</em> contract.
+            </p>
+            <p className="text-base text-dark-300 leading-relaxed mb-3">
+              Quai Vault uses a <strong className="text-dark-200">per-target DelegateCall whitelist</strong> (<code className="text-primary-400">delegatecallAllowed</code> mapping)
+              that is <strong className="text-dark-200">empty by default</strong> — zero DelegateCall attack surface out of the box. When a module
+              requests <code className="text-primary-400">Enum.Operation.DelegateCall</code>, the vault checks whether the
+              target address is on the whitelist. If not, the call reverts
+              with <code className="text-primary-400">DelegateCallNotAllowed(target)</code>.
+            </p>
+            <p className="text-base text-dark-300 leading-relaxed">
+              Whitelist targets are managed via <code className="text-primary-400">addDelegatecallTarget(address)</code> and <code className="text-primary-400">removeDelegatecallTarget(address)</code> multisig
+              self-calls, or pre-populated at deployment via factory overloads. For batched transactions, the
+              recommended whitelist target is <strong className="text-dark-200">MultiSendCallOnly</strong> — a hardened
+              variant that blocks nested DelegateCall within batches, preventing a whitelisted entry point from being
+              used to chain into arbitrary DelegateCall targets.
             </p>
           </div>
         </div>
@@ -249,11 +263,12 @@ export default function Security() {
             <h3 className="text-base font-display font-bold text-dark-200 mb-2">DelegateCall Risks</h3>
             <p className="leading-relaxed">
               DelegateCall allows modules to execute code in the context of the wallet, with full access to storage and
-              funds. <strong className="text-dark-200">By default, DelegateCall is disabled</strong> — the <code className="text-primary-400">delegatecallDisabled</code> flag
-              is set to <code className="text-primary-400">true</code> at deployment, blocking all DelegateCall operations from
-              modules. If you need MultiSend batching or other DelegateCall-dependent functionality, you must explicitly
-              opt in via a multisig self-call. Only enable DelegateCall with trusted, audited modules. Module enabling and
-              disabling is always gated by multisig approval.
+              funds. <strong className="text-dark-200">The DelegateCall whitelist is empty by default</strong> — no
+              contracts can be called via DelegateCall unless explicitly added
+              via <code className="text-primary-400">addDelegatecallTarget(address)</code>. If you need MultiSendCallOnly
+              batching or other DelegateCall-dependent functionality, add only the specific target addresses you trust.
+              Only add trusted, audited contracts to the whitelist. Both module enabling and whitelist management are
+              gated by multisig approval.
             </p>
           </div>
         </div>
@@ -295,9 +310,10 @@ export default function Security() {
               vault storage or drain funds (the attack vector used in the Bybit hack).
             </p>
             <p className="leading-relaxed mt-2">
-              <strong className="text-dark-200">Mitigation:</strong> DelegateCall is disabled by default
-              (<code className="text-primary-400">delegatecallDisabled = true</code>). Only enable it via multisig
-              consensus when needed, and only with thoroughly reviewed modules.
+              <strong className="text-dark-200">Mitigation:</strong> The DelegateCall whitelist is empty by default —
+              only explicitly whitelisted target addresses can be called via DelegateCall. Unlike a global toggle, the
+              whitelist ensures that adding one target (e.g., MultiSendCallOnly) does not open DelegateCall to arbitrary
+              contracts. Whitelist changes require multisig consensus.
             </p>
           </div>
 

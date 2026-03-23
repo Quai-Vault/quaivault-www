@@ -81,12 +81,16 @@ export default function FAQ() {
       answer: "A failed transaction means the external call was attempted but reverted on-chain. Failed transactions are terminal — they cannot be retried or re-executed. You must propose a new transaction if you want to try again. This design prevents attackers from keeping transactions permanently stuck in a retryable state."
     },
     {
-      question: "What is DelegateCall and why is it disabled by default?",
-      answer: "DelegateCall allows a module to execute code in the context of your vault, with full access to storage and funds. This is a powerful but dangerous capability — it's the same attack vector used in the Bybit hack. Quai Vault disables DelegateCall by default (delegatecallDisabled = true) to protect against storage corruption attacks from malicious modules. You can enable it via a multisig self-call if you need MultiSend batching, but only do so with trusted, audited modules."
+      question: "What is DelegateCall and how does the whitelist work?",
+      answer: "DelegateCall allows a module to execute code in the context of your vault, with full access to storage and funds. This is a powerful but dangerous capability — it's the same attack vector used in the $1.46B Bybit hack. Unlike wallets that use a simple on/off toggle, Quai Vault uses a per-target DelegateCall whitelist (delegatecallAllowed mapping) that is empty by default — zero attack surface out of the box. Only explicitly whitelisted contract addresses can be called via DelegateCall, giving you granular control. Add targets via addDelegatecallTarget(address) multisig self-call, or pre-populate them at deployment."
     },
     {
-      question: "How do I enable MultiSend batching?",
-      answer: "MultiSend uses DelegateCall to execute batched transactions. Since DelegateCall is disabled by default, you need to first propose a multisig self-call to setDelegatecallDisabled(false), gather threshold approvals, and execute it. After that, modules can use DelegateCall for batched operations. Only enable this if you trust all enabled modules on your vault."
+      question: "How do I enable MultiSendCallOnly batching?",
+      answer: "MultiSendCallOnly uses DelegateCall to execute batched transactions in the vault's context, but blocks nested DelegateCall within batches for safety. To use it, propose a multisig self-call to addDelegatecallTarget(multiSendCallOnlyAddress), gather threshold approvals, and execute it. This adds only MultiSendCallOnly to the whitelist — other contracts remain blocked. You can also include it in initialDelegatecallTargets when deploying via the factory's 6-param overload."
+    },
+    {
+      question: "Can I enable modules at vault creation?",
+      answer: "Yes. Integrators building deployment flows (e.g., DAO summoners) can use the factory's 5-param or 6-param createWallet overload to pass initialModules and optionally initialDelegatecallTargets. This enables atomic vault+module deployment in a single transaction. Most end users deploying through the UI don't need this — modules can always be enabled afterward via multisig consensus."
     }
   ];
 

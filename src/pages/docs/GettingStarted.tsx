@@ -119,9 +119,11 @@ export default function GettingStarted() {
                   to execute transactions. This must be between 1 and the number of owners.
                 </li>
                 <li>
-                  <strong className="text-dark-200">DelegateCall:</strong> DelegateCall is disabled by default for
-                  security. If you plan to use MultiSend batching, you can enable it at deployment or later via a
-                  multisig self-call. Most users should leave this disabled.
+                  <strong className="text-dark-200">DelegateCall Whitelist:</strong> The DelegateCall whitelist is empty
+                  by default for security — no contracts can be called via DelegateCall. If you need
+                  MultiSendCallOnly batching, add its address to the whitelist via a multisig self-call after
+                  deployment. Integrators can also pre-populate the whitelist at deployment using the factory's
+                  6-param overload.
                 </li>
               </ul>
               <div className="doc-callout-blue mt-3">

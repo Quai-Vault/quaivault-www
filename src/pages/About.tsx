@@ -59,7 +59,7 @@ export default function About() {
     {
       icon: Shield,
       title: 'DelegateCall Hardening',
-      description: 'DelegateCall disabled by default to prevent storage corruption attacks. Opt-in only when needed for MultiSend batching.',
+      description: 'Per-target DelegateCall whitelist prevents storage corruption attacks (Bybit-class). Empty by default — only explicitly whitelisted contracts can be called via DelegateCall.',
     },
   ]
 
@@ -285,7 +285,7 @@ export default function About() {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary-500">•</span>
-                      <span><strong className="text-dark-200">MultiSend:</strong> Batched transaction execution via DelegateCall</span>
+                      <span><strong className="text-dark-200">MultiSendCallOnly:</strong> Batched transaction execution via whitelisted DelegateCall (nested DelegateCall blocked)</span>
                     </li>
                   </ul>
                 </div>
@@ -324,7 +324,7 @@ export default function About() {
                     <li className="flex items-start gap-2"><span className="text-primary-500">•</span> EIP-1271 contract signatures via multisig consensus</li>
                     <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Maximum 20 owners and 50 modules to prevent gas limit DoS</li>
                     <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Module access control via Zodiac linked list storage</li>
-                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> DelegateCall disabled by default — prevents storage corruption attacks from malicious modules</li>
+                    <li className="flex items-start gap-2"><span className="text-primary-500">•</span> Per-target DelegateCall whitelist (empty by default) — prevents storage corruption attacks; more granular than a global toggle</li>
                     <li className="flex items-start gap-2"><span className="text-primary-500">•</span> 5 rounds of AI-assisted security audits (0 Critical, 0 High, 0 Medium findings)</li>
                   </ul>
                 </div>

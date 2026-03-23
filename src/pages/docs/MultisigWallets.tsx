@@ -366,10 +366,12 @@ export default function MultisigWallets() {
               Maximum: <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">30 days</code> (2,592,000 seconds).
             </li>
             <li>
-              <strong className="text-dark-200">DelegateCall Disabled:</strong> Controls whether modules can execute via DelegateCall.
-              Defaults to <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">true</code> (blocked) for
-              security. Must be set to <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">false</code> if
-              you need MultiSend batching or other DelegateCall-dependent module functionality.
+              <strong className="text-dark-200">DelegateCall Whitelist:</strong> Controls which contract addresses can be
+              called via DelegateCall by modules. Empty by default (all DelegateCall blocked). Add specific targets
+              via <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">addDelegatecallTarget(address)</code> or
+              remove them
+              via <code className="text-primary-400 bg-dark-700 px-1.5 py-0.5 rounded text-sm">removeDelegatecallTarget(address)</code> self-calls.
+              For batching, add MultiSendCallOnly's address. Targets can also be pre-populated at deployment.
             </li>
           </ul>
         </div>
