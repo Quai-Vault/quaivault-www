@@ -42,11 +42,11 @@ export default function FAQ() {
     },
     {
       question: "Is Quai Vault audited?",
-      answer: "The contracts have undergone 5 rounds of AI-assisted security audits using Claude Opus 4.6. The final audit round produced 0 Critical, 0 High, and 0 Medium findings (3 Low, 7 Informational). All code is open source for review. A formal third-party audit is planned before mainnet deployment."
+      answer: "The contracts have undergone 5 rounds of AI-assisted security audits using Claude Opus 4.6. The final audit round produced 0 Critical, 0 High, and 0 Medium findings (3 Low, 7 Informational). All code is open source for review. A formal third-party audit is still recommended for users securing significant funds."
     },
     {
       question: "Can I use this on mainnet?",
-      answer: "Currently, Quai Vault is deployed on Orchard Testnet only. Do not store significant funds. Mainnet deployment will follow a formal third-party audit."
+      answer: "Yes. Quai Vault is deployed on Quai mainnet — see the Developer Guide for current mainnet contract addresses. The Orchard Testnet deployment is also still live for development and integration testing. Use your own judgment when choosing how much to secure in any multisig deployment that has not undergone a formal third-party audit."
     },
     {
       question: "What happens if a recovery doesn't execute automatically?",

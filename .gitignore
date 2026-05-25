@@ -14,6 +14,8 @@ dist-ssr
 
 # Environment variables
 .env
+.env.mainnet.bak
+.env.testnet.bak
 .env.local
 .env.*.local
 

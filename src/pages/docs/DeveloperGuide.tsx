@@ -44,21 +44,60 @@ export default function DeveloperGuide() {
       {/* Contract Addresses */}
       <div className="vault-panel p-6 mb-6">
         <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Contract Addresses</h2>
-        <div className="space-y-3 text-base text-dark-300">
+        <div className="space-y-4 text-base text-dark-300">
           <p>
-            Contract addresses are configured via environment variables. On Orchard Testnet:
+            Contract addresses are configured via environment variables. Quai Vault is live on Quai mainnet and
+            also remains deployed on Orchard Testnet for development and integration testing.
           </p>
-          <div className="bg-vault-dark-4 rounded p-4 border border-dark-600 font-mono text-sm overflow-x-auto">
-            <div className="space-y-2 text-dark-300">
-              <div><span className="text-dark-500">QUAIVAULT:</span> <span className="text-primary-400">0x0006bFD36432079e4E813E383A8FD60f7a131388</span></div>
-              <div><span className="text-dark-500">QUAIVAULT_FACTORY:</span> <span className="text-primary-400">0x00613Bd358C36Bed84bf64A9F1bC632d3125779b</span></div>
-              <div><span className="text-dark-500">SOCIAL_RECOVERY_MODULE:</span> <span className="text-primary-400">0x000a01324137F3DC737017479e7c61F87b90d217</span></div>
-              <div><span className="text-dark-500">MULTISEND_CALL_ONLY:</span> <span className="text-primary-400">0x00465B948541CE357ea54BD3C3d8B9995097d199</span></div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Mainnet</h3>
+            <div className="bg-vault-dark-4 rounded p-4 border border-dark-600 font-mono text-sm overflow-x-auto">
+              <div className="space-y-2 text-dark-300">
+                <div><span className="text-dark-500">QUAIVAULT_IMPLEMENTATION:</span> <span className="text-primary-400">0x0038E6d84412A10CdcE41b0f62A05350023f1fb6</span></div>
+                <div><span className="text-dark-500">QUAIVAULT_FACTORY:</span> <span className="text-primary-400">0x003613aC5FFd45bFF7B2F0210DA2fF660908c488</span></div>
+                <div><span className="text-dark-500">SOCIAL_RECOVERY_MODULE:</span> <span className="text-primary-400">0x000dbc29Bdd311C29a4008164052fc2E67c0D937</span></div>
+                <div><span className="text-dark-500">MULTISEND_CALL_ONLY:</span> <span className="text-primary-400">0x003f62e6a7f2EB6b94345a9A41671888eC4A3ebA</span></div>
+              </div>
+            </div>
+            <p className="text-sm text-dark-500 mt-2">
+              Mainnet app:{' '}
+              <a
+                href={config.appUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-400 hover:text-primary-300 underline"
+              >
+                {config.appUrl.replace(/^https?:\/\//, '')}
+              </a>
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Orchard Testnet</h3>
+            <p className="text-sm text-dark-400 mb-2">
+              The testnet implementation is still live for builders. Point your dev environment at{' '}
+              <code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-xs">VITE_TESTNET_APP_URL</code>{' '}
+              (
+              <a
+                href={config.testnetAppUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-400 hover:text-primary-300 underline"
+              >
+                {config.testnetAppUrl.replace(/^https?:\/\//, '')}
+              </a>
+              ) and use the testnet contract addresses below.
+            </p>
+            <div className="bg-vault-dark-4 rounded p-4 border border-dark-600 font-mono text-sm overflow-x-auto">
+              <div className="space-y-2 text-dark-300">
+                <div><span className="text-dark-500">VITE_QUAIVAULT_IMPLEMENTATION:</span> <span className="text-primary-400">0x004E539Cf477A5Cb456A56023f083cD91Bc4934e</span></div>
+                <div><span className="text-dark-500">VITE_QUAIVAULT_FACTORY:</span> <span className="text-primary-400">0x002d1305D597c157bB975967FA2e5337674b0E5F</span></div>
+                <div><span className="text-dark-500">VITE_SOCIAL_RECOVERY_MODULE:</span> <span className="text-primary-400">0x003a465e661D0E44C1e78b7B256D8C37f699E61e</span></div>
+                <div><span className="text-dark-500">VITE_MULTISEND_CALL_ONLY:</span> <span className="text-primary-400">0x002ae8A47C2da497fe569AfCF0486410aA1093E0</span></div>
+              </div>
             </div>
           </div>
-          <p className="text-sm text-dark-500">
-            Note: These addresses are for Orchard Testnet. Mainnet addresses will differ.
-          </p>
         </div>
       </div>
 
@@ -474,7 +513,7 @@ const vaultAddress = event.args.wallet;`}</pre>
             For testing your integration:
           </p>
           <ul className="space-y-2 ml-4 list-disc">
-            <li>Use Orchard Testnet for development</li>
+            <li>Use Orchard Testnet (testnet.quaivault.org) for development and integration testing before targeting mainnet</li>
             <li>Deploy test vaults using the factory</li>
             <li>Test all transaction states (pending, executed, cancelled, expired, failed)</li>
             <li>Test module interactions</li>

@@ -185,8 +185,11 @@ export default function DocsIndex() {
               <div>
                 <p className="font-semibold text-dark-200 mb-1">Network Information</p>
                 <p className="text-dark-400">
-                  Quai Vault is currently deployed on the <strong className="text-dark-200">Orchard Testnet</strong>.
-                  This is an engineering testing environment - do not store significant funds.
+                  Quai Vault is live on <strong className="text-dark-200">Quai mainnet</strong>, and the{' '}
+                  <strong className="text-dark-200">Orchard Testnet</strong> deployment remains available for
+                  development and integration testing. See the{' '}
+                  <Link to="/docs/developer" className="text-primary-500 hover:text-primary-400 underline">Developer Guide</Link>{' '}
+                  for current contract addresses on each network.
                 </p>
               </div>
             </div>

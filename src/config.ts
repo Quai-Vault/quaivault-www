@@ -6,7 +6,8 @@
 export const config = {
   // Site URLs
   siteUrl: import.meta.env.VITE_SITE_URL || 'https://quaivault.org',
-  appUrl: import.meta.env.VITE_APP_URL || 'https://testnet.quaivault.org',
+  appUrl: import.meta.env.VITE_APP_URL || 'https://app.quaivault.org',
+  testnetAppUrl: import.meta.env.VITE_TESTNET_APP_URL || 'https://testnet.quaivault.org',
 
   // GitHub repository
   githubRepo: import.meta.env.VITE_GITHUB_REPO || 'Quai-Vault/quai-multisig-www',
