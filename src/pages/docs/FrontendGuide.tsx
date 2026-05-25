@@ -1,6 +1,9 @@
 import DocLayout from '../../components/DocLayout';
+import config from '../../config';
 
 export default function FrontendGuide() {
+  const appHost = config.appUrl.replace(/^https?:\/\//, '');
+  const testnetHost = config.testnetAppUrl.replace(/^https?:\/\//, '');
   return (
     <DocLayout
       title="Frontend Guide"
@@ -9,16 +12,28 @@ export default function FrontendGuide() {
       {/* App Link */}
       <div className="vault-panel p-6 mb-6 border-l-4 border-primary-500">
         <p className="text-base text-dark-300 leading-relaxed">
-          The Quai Vault frontend is live at{' '}
+          The Quai Vault frontend is live on mainnet at{' '}
           <a
-            href="https://testnet.quaivault.org/"
+            href={config.appUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary-400 hover:text-primary-300 underline"
           >
-            testnet.quaivault.org
+            {appHost}
           </a>
           . Connect your Pelagus wallet to get started.
+        </p>
+        <p className="text-sm text-dark-400 leading-relaxed mt-3">
+          Building or testing? The Orchard Testnet implementation is still live at{' '}
+          <a
+            href={config.testnetAppUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary-400 hover:text-primary-300 underline"
+          >
+            {testnetHost}
+          </a>
+          . See the <a href="/docs/developer" className="text-primary-400 hover:text-primary-300 underline">Developer Guide</a> for testnet contract addresses.
         </p>
       </div>
 

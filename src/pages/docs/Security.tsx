@@ -242,12 +242,13 @@ export default function Security() {
 
         <div className="space-y-4 text-base text-dark-300">
           <div className="doc-callout-yellow">
-            <h3 className="text-base font-semibold doc-callout-yellow-text mb-2">Testnet Deployment</h3>
+            <h3 className="text-base font-semibold doc-callout-yellow-text mb-2">Deployment Status</h3>
             <p className="text-sm doc-callout-yellow-text">
-              Quai Vault is currently deployed on Orchard Testnet for engineering testing.
-              <strong> Do not store significant funds.</strong> The contracts have undergone 5 rounds of AI-assisted
-              security audits using Claude Opus 4.6, with the final round producing 0 Critical, 0 High, and
-              0 Medium findings. A formal third-party audit is planned before mainnet deployment.
+              Quai Vault is deployed on Quai mainnet, with the Orchard Testnet deployment also still live for
+              development and integration testing. The contracts have undergone 5 rounds of AI-assisted security
+              audits using Claude Opus 4.6, with the final round producing 0 Critical, 0 High, and 0 Medium
+              findings. A formal third-party audit is still recommended for users securing significant funds —
+              <strong> use your own judgment when sizing exposure</strong> until that audit is complete.
             </p>
           </div>
 
@@ -362,7 +363,8 @@ export default function Security() {
             </div>
           </div>
           <p className="text-sm text-dark-500">
-            All code is open source. A formal third-party audit is planned before mainnet deployment.
+            All code is open source. A formal third-party audit is still recommended for users securing
+            significant funds.
           </p>
         </div>
       </div>

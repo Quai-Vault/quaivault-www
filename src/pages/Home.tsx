@@ -50,8 +50,8 @@ export default function Home() {
               ? 'bg-[#1a1a1a]/80 border-[#222222]'
               : 'bg-white/80 border-gray-200 shadow-sm'
           }`}>
-            <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
-            <span className="text-dark-400 text-sm">Live on Orchard Testnet</span>
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-dark-400 text-sm">Live on Quai Mainnet</span>
           </div>
 
           <h1 className="font-display font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-dark-100 mb-6">
@@ -67,8 +67,16 @@ export default function Home() {
           </p>
 
           <p className="text-dark-500 text-sm max-w-2xl mx-auto mb-10">
-            Currently in public testing on Quai's Orchard Testnet. Fully functional for testing purposes.
-            Mainnet deployment coming after security audits.
+            Now live on Quai mainnet. The Orchard Testnet deployment is still available at{' '}
+            <a
+              href={config.testnetAppUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary-400 hover:text-primary-300 underline"
+            >
+              {config.testnetAppUrl.replace(/^https?:\/\//, '')}
+            </a>{' '}
+            for development and integration testing.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
