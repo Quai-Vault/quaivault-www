@@ -8,6 +8,29 @@ export default function DeveloperGuide() {
       title="Developer Guide"
       description="Technical documentation for developers integrating with Quai Vault smart contracts."
     >
+      {/* SDK pointer */}
+      <div className="vault-panel p-6 mb-6 border-l-2 border-primary-500">
+        <h2 className="text-lg font-display font-bold text-dark-200 mb-2">
+          Consider the SDK first
+        </h2>
+        <p className="text-base text-dark-300 leading-relaxed">
+          This page documents contract-level integration. If you are building in TypeScript or
+          JavaScript,{' '}
+          <Link to="/docs/sdk" className="text-primary-500 hover:text-primary-400 underline">
+            <code className="bg-vault-dark-4 px-1 py-0.5 rounded font-mono text-sm">
+              @quaivault/sdk
+            </code>
+          </Link>{' '}
+          already handles the parts of this that are easy to get wrong — mining a shard-valid CREATE2
+          salt, telling a successful receipt apart from an executed vault transaction, rejecting Qi
+          addresses that can never sign, and decoding every custom error into an actionable message.
+        </p>
+        <p className="text-base text-dark-300 leading-relaxed mt-2">
+          Read on if you are integrating from another language, or want to understand what the SDK
+          does underneath.
+        </p>
+      </div>
+
       {/* Architecture */}
       <div className="vault-panel p-6 mb-6">
         <h2 className="text-lg font-display font-bold text-dark-200 mb-4">Architecture</h2>
@@ -97,6 +120,47 @@ export default function DeveloperGuide() {
                 <div><span className="text-dark-500">VITE_MULTISEND_CALL_ONLY:</span> <span className="text-primary-400">0x002ae8A47C2da497fe569AfCF0486410aA1093E0</span></div>
               </div>
             </div>
+          </div>
+
+          <div>
+            <h3 className="text-base font-display font-bold text-dark-200 mb-2">Network Endpoints</h3>
+            <p className="text-sm text-dark-400 mb-2">
+              RPC endpoints take a base URL — the Quai shard path (for example{' '}
+              <code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-xs">/cyprus1</code>)
+              is appended by the client library.
+            </p>
+            <div className="bg-vault-dark-4 rounded p-4 border border-dark-600 overflow-x-auto">
+              <table className="w-full text-sm font-mono text-dark-300">
+                <thead>
+                  <tr className="text-dark-500 text-left">
+                    <th className="pr-4 pb-2 font-normal">Network</th>
+                    <th className="pr-4 pb-2 font-normal">Chain ID</th>
+                    <th className="pr-4 pb-2 font-normal">RPC</th>
+                    <th className="pb-2 font-normal">Explorer</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="pr-4 py-1">Mainnet</td>
+                    <td className="pr-4 py-1">9</td>
+                    <td className="pr-4 py-1 text-primary-400">https://rpc.quai.network</td>
+                    <td className="py-1 text-primary-400">https://quaiscan.io</td>
+                  </tr>
+                  <tr>
+                    <td className="pr-4 py-1">Orchard Testnet</td>
+                    <td className="pr-4 py-1">15000</td>
+                    <td className="pr-4 py-1 text-primary-400">https://orchard.rpc.quai.network</td>
+                    <td className="py-1 text-primary-400">https://orchard.quaiscan.io</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="text-sm text-dark-500 mt-2">
+              Note: the Orchard RPC was previously hosted at{' '}
+              <code className="bg-vault-dark-4 px-1 py-0.5 rounded font-mono text-xs">rpc.orchard.quai.network</code>.
+              That hostname no longer resolves — update any existing configuration to{' '}
+              <code className="bg-vault-dark-4 px-1 py-0.5 rounded text-primary-400 font-mono text-xs">orchard.rpc.quai.network</code>.
+            </p>
           </div>
         </div>
       </div>
@@ -296,8 +360,13 @@ export default function DeveloperGuide() {
               <pre>{`import { Contract, JsonRpcProvider, parseQuai } from 'quais';
 import QuaiVaultABI from './abis/QuaiVault.json';
 
+// Mainnet: https://rpc.quai.network  (chain ID 9)
+// Orchard testnet: https://orchard.rpc.quai.network  (chain ID 15000)
+// usePathing lets quais append the shard path (e.g. /cyprus1) automatically.
+const RPC_URL = 'https://orchard.rpc.quai.network';
+
 const walletAddress = '0x...'; // Your vault address
-const provider = new JsonRpcProvider(RPC_URL);
+const provider = new JsonRpcProvider(RPC_URL, undefined, { usePathing: true });
 const wallet = new Contract(walletAddress, QuaiVaultABI, provider);
 
 // Propose a transaction with expiration and delay
