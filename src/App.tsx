@@ -9,6 +9,9 @@ import MultisigWallets from './pages/docs/MultisigWallets'
 import Modules from './pages/docs/Modules'
 import FrontendGuide from './pages/docs/FrontendGuide'
 import DeveloperGuide from './pages/docs/DeveloperGuide'
+import SdkOverview from './pages/docs/SdkOverview'
+import SdkGuides from './pages/docs/SdkGuides'
+import SdkReference from './pages/docs/SdkReference'
 import Security from './pages/docs/Security'
 import FAQ from './pages/docs/FAQ'
 
@@ -25,6 +28,9 @@ function App() {
         <Route path="/docs/modules" element={<Modules />} />
         <Route path="/docs/frontend-guide" element={<FrontendGuide />} />
         <Route path="/docs/developer-guide" element={<DeveloperGuide />} />
+        <Route path="/docs/sdk" element={<SdkOverview />} />
+        <Route path="/docs/sdk-guides" element={<SdkGuides />} />
+        <Route path="/docs/sdk-reference" element={<SdkReference />} />
         <Route path="/docs/security" element={<Security />} />
         <Route path="/docs/faq" element={<FAQ />} />
       </Routes>
