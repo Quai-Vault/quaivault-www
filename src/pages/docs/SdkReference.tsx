@@ -27,7 +27,7 @@ export default function SdkReference() {
   return (
     <DocLayout
       title="SDK Reference"
-      description="Complete API surface for @quaivault/sdk — client, vault, factory, recovery, errors and utilities."
+      description="Complete API surface for @quaivault/sdk v0.5.0 — client, vault, factory, recovery, types, errors and utilities."
     >
       {/* Client */}
       <div className={panel}>
@@ -38,17 +38,21 @@ export default function SdkReference() {
             ['qv.vault(address): Vault', 'Handle to one vault. No I/O.'],
             ['qv.network / qv.provider / qv.signer', 'Resolved network, provider, and signer (null when read-only).'],
             ['qv.config', 'Resolved config with the private key stripped and the indexer key masked — safe to log.'],
+            ['qv.now: Clock', 'Configured source of "now", in Unix seconds. Defaults to the local clock.'],
+            ['qv.abis: AbiLookup | undefined', 'Configured ABI lookup for contracts the SDK does not ship.'],
+            ['qv.indexer / qv.queries', 'IndexerClient and typed query layer, or null when no indexer is configured.'],
             ['await qv.address()', 'Connected address, or null.'],
-            ['await qv.indexerHealth()', 'Liveness and lag: { available, lastIndexedBlock, blocksBehind, isSyncing }.'],
+            ['await qv.indexerHealth()', 'Liveness and lag: { available, lastIndexedBlock, chainHead?, blocksBehind?, isSyncing, error? }.'],
           ]}
         />
 
         <h3 className={`${h3} mt-5`}>Discovery</h3>
         <Api
           entries={[
-            ['await qv.vaults.forOwner(address, page?)', 'Indexer-only — no on-chain reverse index exists.'],
-            ['await qv.vaults.forGuardian(address, page?)', 'Vaults where the address is an active guardian.'],
-            ['await qv.vaults.exists(address)', 'Whether the factory deployed or registered this vault.'],
+            ['await qv.vaults.forOwner(address, page?) → Address[]', 'Indexer-only — no on-chain reverse index exists. Throws NoIndexerError without one.'],
+            ['await qv.vaults.forGuardian(address, page?) → Address[]', 'Vaults where the address is an active guardian. Indexer-only.'],
+            ['await qv.vaults.exists(address)', 'Whether the factory deployed or registered this vault. Reads chain.'],
+            ['qv.vaults.get(address) → Vault', 'Alias for qv.vault(address).'],
           ]}
         />
       </div>
@@ -61,9 +65,10 @@ export default function SdkReference() {
             ['await qv.factory.create(params, options?)', 'Mines a salt if none is given, deploys, returns { address, salt, chainTxHash, predictionMatched }.'],
             ['await qv.factory.mineSalt(params, options?, strategy?)', 'Mine only. Reusable later with identical params.'],
             ['qv.factory.predictAddress(deployer, salt, params)', 'Off-chain CREATE2 prediction; matches predictWalletAddress exactly.'],
-            ['await qv.factory.verify()', 'Confirms the configured implementation matches the factory. Catches a misconfiguration before it produces wrong addresses.'],
+            ['await qv.factory.verify() → { valid, errors }', 'Confirms the configured implementation matches the factory. Catches a misconfiguration before it produces wrong addresses.'],
             ['await qv.factory.implementation()', 'Implementation every proxy delegates to.'],
-            ['await qv.factory.vaultCount() / vaultAt(i)', 'Registry enumeration.'],
+            ['qv.factory.address', 'Configured factory address.'],
+            ['await qv.factory.vaultCount() / vaultAt(i) / isRegistered(v)', 'Registry enumeration and membership.'],
             ['await qv.factory.register(vault)', 'Register an externally deployed proxy. Owner-only.'],
           ]}
         />
@@ -73,7 +78,8 @@ export default function SdkReference() {
           <code className={code}>minExecutionDelay</code> (0–30 days),{' '}
           <code className={code}>initialModules</code>,{' '}
           <code className={code}>initialDelegatecallTargets</code>,{' '}
-          <code className={code}>salt</code>. Max 20 owners.
+          <code className={code}>salt</code>. Capped at 20 owners and 50 initial modules, both
+          validated before deploying rather than reverting on chain.
         </p>
       </div>
 
@@ -84,20 +90,34 @@ export default function SdkReference() {
           entries={[
             ['await vault.info()', 'owners, threshold, minExecutionDelay, nonce, moduleCount, balance.'],
             ['await vault.owners() / threshold() / balance()', ''],
+            ['await vault.view() → VaultView', 'Explicit owners + threshold snapshot with a visible capturedAt and source.'],
+            ['vault.pinned(view) → Vault', 'A handle that reuses that snapshot for reads. Write preconditions bypass it by construction, so a pinned view can never gate a signature.'],
             ['await vault.modules()', 'In linked-list order — always read from chain, because disableModule needs the predecessor.'],
+            ['await vault.previousModule(m)', 'The linked-list predecessor disableModule requires.'],
             ['await vault.delegatecallTargets()', 'Indexer-only: the on-chain mapping is not enumerable.'],
             ['await vault.isOwner(a) / isModuleEnabled(m) / isDelegatecallAllowed(t)', ''],
+            ['await vault.hasApproved(txHash, owner)', 'Whether that owner currently has an active approval.'],
             ['await vault.isValidSignature(hash)', 'Whether a hash is pre-approved for EIP-1271.'],
             ['await vault.transaction(txHash)', 'One transaction as a VaultTransaction.'],
+            ['await vault.transactions(txHashes) → Map', 'Batched. Shares one owner/threshold read and one confirmations query across the set.'],
             ['await vault.pendingTransactions(page?)', ''],
             ['await vault.transactionHistory(page?)', 'Executed, cancelled, expired and failed.'],
             ['await vault.transactionHash(to, value, data, nonce?)', 'Compute a vault-transaction hash.'],
             ['await vault.balances(options?)', 'Native plus tokens. Discovery via the indexer; amounts verified on chain by default.'],
             ['await vault.deposits(page?) / tokenTransfers(page?) / signedMessages()', ''],
-            ['await vault.affordances(txHash, caller?)', 'What the caller may legally do now, and when blocked actions unlock.'],
+            ['await vault.affordances(txHash, caller?, at?)', 'What the caller may legally do now, and when blocked actions unlock. at overrides the configured clock for this call.'],
             ['await vault.describe(txHash, caller?)', 'Compact human-readable summary.'],
           ]}
         />
+        <p className={`${prose} mt-3 text-sm text-dark-400`}>
+          <code className={code}>BalanceOptions</code>: <code className={code}>verify</code>{' '}
+          (default true), <code className={code}>maxTokens</code> (50),{' '}
+          <code className={code}>transferScanLimit</code> (500),{' '}
+          <code className={code}>maxTokenIdChecks</code> (100),{' '}
+          <code className={code}>concurrency</code> (8). Scan limits that bind are reported back in{' '}
+          <code className={code}>VaultBalances.truncated</code> rather than silently dropping
+          holdings.
+        </p>
       </div>
 
       {/* Vault writes */}
@@ -138,9 +158,18 @@ export default function SdkReference() {
             ['await vault.expire(txHash)', 'Permissionless once past the deadline.'],
             ['await vault.waitForExecutable(txHash, options?)', 'Polls until ready; fails fast when waiting cannot help.'],
             ['await vault.waitForIndexer(blockNumber?, options?)', 'Closes the write-then-read race. Returns { reached, lastIndexedBlock }.'],
-            ['vault.watch(handler, options?) → Subscription', 'Supabase Realtime; one channel per vault.'],
+            ['vault.watch(handler, options?) → Subscription', 'Realtime; one channel per vault. Events fire after the indexer processes a block, so treat them as a signal to re-read.'],
           ]}
         />
+        <p className={`${prose} mt-3 text-sm text-dark-400`}>
+          <code className={code}>WatchOptions.topics</code>:{' '}
+          <code className={code}>transactions</code>, <code className={code}>confirmations</code>,{' '}
+          <code className={code}>owners</code>, <code className={code}>modules</code>,{' '}
+          <code className={code}>deposits</code>, <code className={code}>tokenTransfers</code>,{' '}
+          <code className={code}>recoveries</code>, <code className={code}>signedMessages</code>.{' '}
+          <code className={code}>onStatus</code> surfaces subscription lifecycle changes so you can
+          show reconnects.
+        </p>
       </div>
 
       {/* Recovery */}
@@ -149,8 +178,9 @@ export default function SdkReference() {
         <Api
           entries={[
             ['await vault.recovery.config()', '{ guardians, threshold, recoveryPeriod, configured }.'],
-            ['await vault.recovery.isGuardian(a) / isEnabled() / hasPending()', ''],
-            ['await vault.recovery.get(hash) / pending() / history(page?)', 'get() throws for a cancelled recovery — cancellation deletes the on-chain record.'],
+            ['await vault.recovery.isGuardian(a) / isEnabled() / hasPending() / pendingHashes()', ''],
+            ['await vault.recovery.get(hash) / pending()', 'get() throws for a cancelled recovery — cancellation deletes the on-chain record.'],
+            ['await vault.recovery.history(page?)', 'Indexer-only. Throws NoIndexerError without one, rather than returning [] — an empty array is indistinguishable from "no recovery history".'],
             ['await vault.recovery.approvals(hash)', 'Guardians with an active approval.'],
             ['await vault.recovery.predictHash(newOwners, newThreshold)', ''],
             ['await vault.recovery.initiate({ newOwners, newThreshold })', 'Guardians only. Returns { recoveryHash, chainTxHash }.'],
@@ -158,9 +188,16 @@ export default function SdkReference() {
             ['await vault.recovery.execute(h)', 'Pre-checks the transient owner count against the 20-owner cap.'],
             ['await vault.recovery.cancel(h)', 'Any current vault owner.'],
             ['await vault.recovery.expire(h)', 'Permissionless once past the deadline.'],
-            ['await vault.recovery.affordances(hash, caller?)', ''],
+            ['await vault.recovery.affordances(hash, caller?, at?)', 'at overrides the configured clock for this call.'],
           ]}
         />
+        <p className={`${prose} mt-3 text-sm text-dark-400`}>
+          Recovery status is derived from timestamps rather than read from a stored flag, and
+          nothing transitions a recovery to expired on its own —{' '}
+          <code className={code}>expire</code> is a permissionless cleanup call somebody has to
+          make. An un-cleaned recovery therefore still reads as{' '}
+          <code className={code}>pending</code> in the indexer long after its deadline.
+        </p>
       </div>
 
       {/* Types */}
@@ -171,10 +208,14 @@ export default function SdkReference() {
         <div className={block}>
           <pre>{`{
   hash, vault, to, value, data,
-  proposer, proposedAt,
+  proposer,
+  proposedAt,       // Unix seconds — 0 on indexer reads. Never render 0 as a date.
+  proposedAtBlock?, // block number — indexer reads only
+
   kind,          // 'transfer' | 'wallet_admin' | 'erc20_transfer' | ...
-  decoded?,      // { name, signature, args, target }
+  decoded?,      // { name, signature, args, target, selector }
   summary,       // one-line human-readable description
+  abiSource,     // 'builtin' | 'heuristic' | 'supplied' | 'none' — required
 
   status,        // 'pending' | 'timelocked' | 'ready' | 'executed'
                  // | 'failed' | 'cancelled' | 'expired'
@@ -193,6 +234,44 @@ export default function SdkReference() {
           refinements of the contract's "pending": both mean quorum reached and not yet executed,
           differing only on whether the delay has elapsed.
         </p>
+        <p className={`${prose} mt-2 text-sm text-dark-400`}>
+          Only chain reads carry a proposal timestamp — the vault stores one in the transaction
+          struct, while the indexer records the block instead. Use{' '}
+          <code className={code}>proposedAtBlock</code> when{' '}
+          <code className={code}>source === 'indexer'</code>.
+        </p>
+
+        <h3 className={`${h3} mt-5`}>AbiSource</h3>
+        <p className={`${prose} mb-2 text-sm`}>
+          Present on every <code className={code}>VaultTransaction</code> and{' '}
+          <code className={code}>DecodeResult</code>. It measures how the ABI was bound to the
+          target address — the part that can be wrong — not merely where the ABI came from. Render
+          it in any UI where an owner approves based on the summary.
+        </p>
+        <div className={block}>
+          <pre>{`'builtin'    // the SDK knows which contract this address is
+'heuristic'  // selector shape alone, against an unknown address — usually right, never verified
+'supplied'   // an ABI you provided via ClientOptions.abis / DecodeContext.abis
+'none'       // nothing matched; only the 4-byte selector is known`}</pre>
+        </div>
+
+        <h3 className={`${h3} mt-5`}>VaultView</h3>
+        <div className={block}>
+          <pre>{`{
+  owners, threshold,
+  capturedAt,    // Unix seconds the snapshot was taken
+  source,        // 'indexer' | 'chain'
+}`}</pre>
+        </div>
+
+        <h3 className={`${h3} mt-5`}>Page&lt;T&gt;</h3>
+        <div className={block}>
+          <pre>{`{
+  data,      // T[]
+  total,     // APPROXIMATE on large result sets — planner estimate, not a full scan
+  hasMore,   // always exact. This is what a paging loop should test.
+}`}</pre>
+        </div>
 
         <h3 className={`${h3} mt-5`}>ExecuteResult</h3>
         <div className={block}>
@@ -216,6 +295,27 @@ export default function SdkReference() {
   blockedBy?,    // 'not_owner' | 'threshold' | 'timelock' | 'quorum_locked' | ...
 }`}</pre>
         </div>
+
+        <h3 className={`${h3} mt-5`}>RecoveryRequest</h3>
+        <div className={block}>
+          <pre>{`{
+  hash, vault, newOwners, newThreshold,
+  approvalCount,
+  requiredThreshold,  // captured at initiation — later config changes do not move it
+  executionTime,      // unix seconds after which execution is permitted
+  expiration,         // unix seconds after which it is dead and can be cleaned up
+  status,             // 'pending' | 'timelocked' | 'ready' | 'executed'
+                      // | 'cancelled' | 'expired'
+  executed,
+  initiator?,         // indexer reads only — the module's struct does not retain it
+  source,             // 'indexer' | 'chain'
+}`}</pre>
+        </div>
+        <p className={`${prose} mt-2 text-sm text-dark-400`}>
+          <code className={code}>cancelled</code> is only ever reported from the indexer.{' '}
+          <code className={code}>cancelRecovery</code> deletes the on-chain struct, so a chain read
+          cannot distinguish a cancelled recovery from one that never existed.
+        </p>
       </div>
 
       {/* Errors */}
@@ -239,6 +339,7 @@ export default function SdkReference() {
             </thead>
             <tbody className="align-top">
               {[
+                ['ABORTED', 'AbortError', 'An AbortSignal fired — one typed error for every abort path'],
                 ['CONFIG', 'ConfigError', 'Missing or invalid configuration, including an unusable private key'],
                 ['NO_SIGNER', 'NoSignerError', 'A write was attempted on a read-only client'],
                 ['NO_INDEXER', 'NoIndexerError', 'An indexer-only operation without indexer configuration'],
@@ -275,30 +376,67 @@ DelegateCallNotAllowed(0x00…) — DelegateCall targets must be explicitly
         <div className={block}>
           <pre>{`import {
   // CREATE2
-  predictVaultAddress, mineSalt, shardPrefixOf, encodeInitData,
+  predictVaultAddress, mineSalt, shardPrefixOf,
+  encodeInitData, computeBytecodeHash, computeFullSalt,
 
   // addresses
-  assertQuaiAddress, isUsableQuaiAddress, inspectAddress,
+  assertQuaiAddress, assertQuaiAddresses, isUsableQuaiAddress, inspectAddress,
 
-  // encoding / decoding
-  selfCall, tokenCalls, encodeMultiSend, minimumExpiration,
-  decodeCall, decodeMultiSendPayload,
+  // encoding
+  selfCall, tokenCalls, recoveryCall, encodeMultiSend,
+  encodeMultiSendPayload, minimumExpiration, interfaces,
+
+  // decoding
+  decodeCall, decodeMultiSendPayload, abiRegistry,
 
   // lifecycle
-  classifyExecution, deriveStatus, deriveRecoveryStatus, computeAffordances,
+  classifyExecution, extractProposedTxHash,
+  deriveStatus, deriveRecoveryStatus, executableAfterOf, isTerminal, nowSeconds,
+  computeAffordances, allowedActions,
 
   // errors
-  decodeRevert, knownErrorSelectors, remediationFor,
+  decodeRevert, decodeRevertFromError, knownErrorSelectors, remediationFor,
 
-  // resilience
-  withRetry, isTransient,
+  // resilience and concurrency
+  withRetry, isTransient, mapPooled, DEFAULT_CONCURRENCY,
 
-  // config
-  networks, mainnet, testnet, ENV_VARS,
+  // display safety
+  sanitizeText, DEFAULT_TEXT_LIMIT,
+
+  // config and limits
+  networks, mainnet, testnet, isNetworkName, resolveConfig, ENV_VARS,
+  MAX_OWNERS, MAX_MODULES, MAX_EXECUTION_DELAY, SENTINEL_MODULES, ZERO_ADDRESS,
 } from '@quaivault/sdk';
 
 import { QuaiVaultAbi, QuaiVaultFactoryAbi } from '@quaivault/sdk/abi';`}</pre>
         </div>
+        <p className={`${prose} mt-3 text-sm text-dark-400`}>
+          <code className={code}>sanitizeText</code> strips ANSI escapes, bidi overrides and
+          zero-width characters from attacker-controlled display strings. The SDK already applies it
+          to token <code className={code}>symbol</code> / <code className={code}>name</code> and to
+          revert reasons — both deployer-chosen, and both destined for terminals. Apply it yourself
+          to any other on-chain string you render.
+        </p>
+      </div>
+
+      {/* Indexer */}
+      <div className={panel}>
+        <h2 className={h2}>Indexer access</h2>
+        <p className={`${prose} mb-3 text-sm`}>
+          For queries the typed surface does not cover. Available as{' '}
+          <code className={code}>qv.indexer</code>, or <code className={code}>null</code> when no
+          indexer is configured.
+        </p>
+        <Api
+          entries={[
+            ['qv.indexer.rest → PostgrestClient', 'Escape hatch to the raw query builder.'],
+            ['qv.indexer.from(table)', 'Schema-scoped query builder for one table.'],
+            ['qv.indexer.channel(name) / removeChannel(ch)', 'Realtime channels, for subscriptions beyond vault.watch().'],
+            ['await qv.indexer.state()', '{ lastIndexedBlock, isSyncing }, or null.'],
+            ['await qv.indexer.health(force?)', 'Cached liveness and lag probe.'],
+            ['await qv.indexer.waitForBlock(n, options?)', 'Underlying primitive behind vault.waitForIndexer().'],
+          ]}
+        />
       </div>
 
       <div className={panel}>

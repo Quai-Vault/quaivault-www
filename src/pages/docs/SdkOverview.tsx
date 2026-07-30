@@ -62,7 +62,24 @@ export default function SdkOverview() {
           <pre>{`npm install @quaivault/sdk`}</pre>
         </div>
         <p className={`${prose} mt-3`}>
-          Requires Node 20 or later. Ships ESM and CommonJS builds with full TypeScript types.
+          Current version <strong className="text-dark-200">0.5.0</strong>. Ships ESM and CommonJS
+          builds with full TypeScript types, and publishes with an npm provenance attestation
+          linking each release to the commit and workflow run that built it.
+        </p>
+        <p className={`${prose} mt-2 text-sm text-dark-400`}>
+          Requires <strong className="text-dark-200">Node 22 or later</strong> — realtime needs a
+          global <code className={code}>WebSocket</code>, which Node 20 does not provide. While the
+          version is <code className={code}>0.x</code>, minor bumps may contain breaking changes;
+          the{' '}
+          <a
+            href="https://github.com/Quai-Vault/quaivault-sdk/blob/main/CHANGELOG.md"
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary-500 hover:text-primary-400 underline"
+          >
+            changelog
+          </a>{' '}
+          records every one and why it was made.
         </p>
       </div>
 
@@ -161,10 +178,12 @@ if (result.outcome !== 'executed') {
                 ['QUAIVAULT_NETWORK', 'mainnet or testnet'],
                 ['QUAIVAULT_RPC_URL', 'RPC base URL — the shard path is appended automatically'],
                 ['QUAIVAULT_PRIVATE_KEY', 'Signing key. Required only for writes'],
+                ['QUAIVAULT_INDEXER_URL', 'Point at a self-hosted indexer'],
                 ['QUAIVAULT_INDEXER_ANON_KEY', 'Override the shipped read-only indexer key'],
                 ['QUAIVAULT_INDEXER_SCHEMA', 'mainnet or testnet'],
+                ['QUAIVAULT_INDEXER_HEALTH_URL', 'Endpoint used for the lag and liveness probe'],
                 ['QUAIVAULT_CONSISTENCY', 'auto (default), indexed, or chain'],
-                ['QUAIVAULT_MAX_INDEXER_LAG_BLOCKS', 'Lag budget before auto falls back to chain'],
+                ['QUAIVAULT_MAX_INDEXER_LAG_BLOCKS', 'Lag budget before auto falls back to chain. Default 50'],
               ].map(([name, purpose]) => (
                 <tr key={name} className="border-b border-dark-700/50">
                   <td className="py-2 pr-4 font-mono text-primary-400 whitespace-nowrap">{name}</td>
@@ -208,7 +227,33 @@ if (result.outcome !== 'executed') {
           Indexer credentials ship with the SDK, so vault discovery, history and realtime work with
           no setup. The publishable key is a public read-only credential — the indexer grants the{' '}
           <code className={code}>anon</code> role <code className={code}>SELECT</code> and nothing
-          else.
+          else. Contract addresses come from the preset too, and are overridable with{' '}
+          <code className={code}>QUAIVAULT_FACTORY</code>,{' '}
+          <code className={code}>QUAIVAULT_IMPLEMENTATION</code>,{' '}
+          <code className={code}>QUAIVAULT_SOCIAL_RECOVERY_MODULE</code> and{' '}
+          <code className={code}>QUAIVAULT_MULTISEND_CALL_ONLY</code> for a custom deployment.
+        </p>
+
+        <h3 className={`${h3} mt-6`}>Options with no environment equivalent</h3>
+        <p className={`${prose} mb-3 text-sm`}>
+          These take a function or an object, so they are passed to{' '}
+          <code className={code}>connect()</code> directly.
+        </p>
+        <div className={block}>
+          <pre>{`const qv = connect({
+  network: 'mainnet',
+
+  provider,           // bring your own quais Provider
+  signer,             // or your own Signer — a browser wallet, a KMS-backed signer
+  abis,               // describe calls to contracts the SDK does not ship
+  now: () => secs,    // source of "now" when the local clock cannot be trusted
+  retry: { maxAttempts: 4, baseDelayMs: 250, onRetry },
+  useEnv: false,      // ignore process.env entirely
+});`}</pre>
+        </div>
+        <p className={`${prose} mt-3 text-sm text-dark-400`}>
+          <code className={code}>qv.config</code> returns the resolved configuration with the
+          private key stripped and the indexer key masked, so it is safe to log.
         </p>
       </div>
 
@@ -248,6 +293,35 @@ if (result.outcome !== 'executed') {
         </div>
       </div>
 
+      {/* Resilience */}
+      <div className={panel}>
+        <h2 className={h2}>Resilience</h2>
+        <div className={`${prose} space-y-3`}>
+          <p>
+            Reads retry transient RPC and indexer failures with exponential backoff and full
+            jitter. Rate limits, 5xx responses and raw transport failures are retried; reverts,
+            user rejections, and nonce and funds errors are permanent by definition and are not.
+            Anything unrecognised is treated as permanent too, so a genuine bug surfaces
+            immediately instead of hiding behind three slow attempts.
+          </p>
+          <p>
+            <strong className="text-dark-200">Writes are never retried.</strong> A resubmit that
+            looks like a timeout to the client may already be in the mempool, so retrying risks a
+            double broadcast.
+          </p>
+        </div>
+        <div className={`${block} mt-3`}>
+          <pre>{`const qv = connect({
+  network: 'mainnet',
+  retry: {
+    maxAttempts: 4,
+    baseDelayMs: 250,
+    onRetry: ({ attempt, delayMs, error }) => log(attempt, delayMs, error),
+  },
+});`}</pre>
+        </div>
+      </div>
+
       {/* Next */}
       <div className={panel}>
         <h2 className={h2}>Next</h2>
@@ -258,7 +332,8 @@ if (result.outcome !== 'executed') {
             </Link>
             <p className="text-sm text-dark-500 mt-1">
               Task-oriented recipes: deploying, transfers, batching, rotating owners, social
-              recovery, EIP-1271 — and the three behaviours that surprise people.
+              recovery, EIP-1271, describing calls to unknown contracts, clock skew — and the three
+              behaviours that surprise people.
             </p>
           </div>
           <div>

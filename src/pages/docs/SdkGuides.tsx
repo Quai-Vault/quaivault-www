@@ -14,7 +14,7 @@ export default function SdkGuides() {
   return (
     <DocLayout
       title="SDK Guides"
-      description="Task-oriented recipes, and the three Quai Vault behaviours that catch people out."
+      description="Task-oriented recipes, the three Quai Vault behaviours that catch people out, and what to do when the SDK cannot vouch for a decode."
     >
       {/* ---------------- Gotcha 1 ---------------- */}
       <div className={panel}>
@@ -209,7 +209,8 @@ await vault.propose.erc1155Transfer({ token, to, id, amount });`}</pre>
               which proposal you need rather than letting the batch revert.
             </p>
             <div className={block}>
-              <pre>{`// One-time setup, requires full owner consensus
+              <pre>{`// One-time setup. A self-call, so it takes a normal
+// threshold-of-owners approval — and bypasses the timelock.
 await vault.propose.addDelegatecallTarget(multiSendAddress);
 
 await vault.propose.batch([
@@ -307,6 +308,65 @@ preview.wouldRevert;  // decoded revert, if any
 preview.description;  // "Propose: Transfer 1.0 QUAI to 0x00cd…"`}</pre>
             </div>
           </div>
+
+          <div>
+            <h3 className={h3}>Read many transactions at once</h3>
+            <p className={`${prose} mb-2 text-sm`}>
+              <code className={code}>transactions()</code> shares one owner and threshold read, and
+              one confirmations query, across the whole set — rather than repeating them per hash.
+            </p>
+            <div className={block}>
+              <pre>{`const byHash = await vault.transactions([h1, h2, h3]);  // Map<Bytes32, VaultTransaction>
+byHash.get(h1)?.summary;`}</pre>
+            </div>
+          </div>
+
+          <div>
+            <h3 className={h3}>Pin owners and threshold for a render pass</h3>
+            <p className={`${prose} mb-2 text-sm`}>
+              Rendering a list of transactions otherwise re-reads the owner set for each one.{' '}
+              <code className={code}>view()</code> takes an explicit snapshot with a visible{' '}
+              <code className={code}>capturedAt</code>, and{' '}
+              <code className={code}>pinned(view)</code> returns a vault handle that reuses it.
+            </p>
+            <div className={block}>
+              <pre>{`const view = await vault.view();      // { owners, threshold, capturedAt, source }
+const pinned = vault.pinned(view);
+
+await Promise.all(hashes.map((h) => pinned.affordances(h, caller)));`}</pre>
+            </div>
+            <p className={`${prose} mt-2 text-sm text-dark-400`}>
+              Write preconditions bypass the snapshot by construction, so a pinned view can never
+              gate a signature — it only ever affects what you display.
+            </p>
+          </div>
+
+          <div>
+            <h3 className={h3}>List balances</h3>
+            <p className={`${prose} mb-2 text-sm`}>
+              Token discovery is indexer-driven, because the chain cannot answer "which contracts
+              has this address touched" without scanning every log. Amounts are then verified on
+              chain by default, since replaying transfers misses anything the indexer did not
+              observe.
+            </p>
+            <div className={block}>
+              <pre>{`const { native, tokens, truncated } = await vault.balances({
+  verify: true,            // default — confirm each amount on chain
+  maxTokens: 50,           // default
+  transferScanLimit: 500,  // default; raise for long-lived vaults
+  concurrency: 8,          // default ceiling on in-flight RPC reads
+});
+
+truncated?.transfers;      // set when the scan budget was exhausted
+truncated?.tokens;         // set when more tokens existed than maxTokens`}</pre>
+            </div>
+            <p className={`${prose} mt-2 text-sm text-dark-400`}>
+              Token <code className={code}>symbol</code> and <code className={code}>name</code> are
+              deployer-controlled strings. They are run through{' '}
+              <code className={code}>sanitizeText</code> — which strips ANSI escapes, bidi
+              overrides and zero-width characters — before you ever see them.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -333,6 +393,137 @@ preview.description;  // "Propose: Transfer 1.0 QUAI to 0x00cd…"`}</pre>
         <p className={`${prose} mt-2 text-sm text-dark-400`}>
           <code className={code}>vault.describe(txHash)</code> renders the same information as a
           compact human-readable block.
+        </p>
+      </div>
+
+      {/* ---------------- ABIs ---------------- */}
+      <div className={panel}>
+        <h2 className={h2}>Describing calls to contracts the SDK doesn't know</h2>
+        <div className={`${prose} space-y-3`}>
+          <p>
+            The SDK ships ABIs for the vault, factory, recovery module, MultiSend and the token
+            standards. A proposal targeting anything else renders honestly but bluntly:
+          </p>
+        </div>
+        <div className={`${block} mt-3`}>
+          <pre>{`Call 0x0033…3333 (selector 0xa9059cbb)`}</pre>
+        </div>
+        <p className={`${prose} mt-3`}>
+          Supply an ABI for that address and it gets described instead. The lookup is address-keyed
+          rather than a list to try: attempting a pile of ABIs against arbitrary calldata until one
+          parses is how a call gets confidently decoded as the wrong thing.
+        </p>
+        <div className={`${block} mt-3`}>
+          <pre>{`import { connect, abiRegistry } from '@quaivault/sdk';
+
+const qv = connect({
+  network: 'mainnet',
+  abis: abiRegistry({ '0x0033...': stakingAbi }),   // matched case-insensitively
+});`}</pre>
+        </div>
+
+        <p className={`${prose} mt-4`}>
+          Every decode carries <code className={code}>abiSource</code>, and it is a required field
+          rather than an optional one. In a multisig the summary is what owners read before
+          approving, so decodes of different strength must not render identically. The name is
+          about <em>how the ABI was bound to this address</em> — which is the part that can be
+          wrong — not merely where it came from.
+        </p>
+
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-sm text-dark-300">
+            <thead>
+              <tr className="text-left text-dark-500 border-b border-dark-600">
+                <th className="pb-2 pr-4 font-normal font-mono">abiSource</th>
+                <th className="pb-2 font-normal">Bound how</th>
+              </tr>
+            </thead>
+            <tbody className="align-top">
+              {[
+                [
+                  'builtin',
+                  'The SDK knows which contract this address is — a vault self-call, the configured recovery module, the configured MultiSend, or a bare value transfer that needs no ABI at all.',
+                ],
+                [
+                  'heuristic',
+                  'Selector shape alone, against an address the SDK knows nothing about. transfer(address,uint256) reads as an ERC20 transfer whether the target is a token, an unrelated contract exposing that signature, or an address with no code. Usually right, never verified.',
+                ],
+                [
+                  'supplied',
+                  'You said so, via abis. The SDK cannot verify the ABI corresponds to the deployed code.',
+                ],
+                ['none', 'Nothing matched. Only the 4-byte selector is known, and the summary says exactly that.'],
+              ].map(([src, meaning]) => (
+                <tr key={src} className="border-b border-dark-700/50">
+                  <td className="py-2 pr-4 font-mono text-primary-400 whitespace-nowrap align-top">
+                    {src}
+                  </td>
+                  <td className="py-2">{meaning}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className={`${prose} mt-4`}>
+          Summaries are deliberately not hedged for <code className={code}>heuristic</code>: an
+          ordinary token transfer is the common case, and phrasing every one as uncertain would make
+          the warning worthless by repetition. The field carries the uncertainty instead — so if you
+          are building an approval UI, render it.
+        </p>
+        <p className={`${prose} mt-2`}>
+          Supplied ABIs are consulted only after every built-in match, so they cannot change how a
+          vault self-call or a known module call is read, and before the token selector heuristics.{' '}
+          <code className={code}>decoded.selector</code> is surfaced so a reviewer can check the
+          claimed function against an independent source — the only defence against a colliding
+          selector in a supplied ABI, which the SDK cannot detect on its own.
+        </p>
+        <p className={`${prose} mt-2 text-sm text-dark-400`}>
+          The SDK does not fetch ABIs from the network. A malformed ABI, or a lookup that throws,
+          degrades that one row to <code className={code}>abiSource: 'none'</code> rather than
+          failing the surrounding page.
+        </p>
+      </div>
+
+      {/* ---------------- Clock ---------------- */}
+      <div className={panel}>
+        <h2 className={h2}>When the local clock cannot be trusted</h2>
+        <div className={`${prose} space-y-3`}>
+          <p>
+            The contracts decide with <code className={code}>block.timestamp</code>. Everything the
+            SDK derives locally — a transaction's <code className={code}>ready</code> vs{' '}
+            <code className={code}>timelocked</code>, what a caller may do next, whether a recovery
+            period has elapsed — predicts that, and a machine whose clock is wrong predicts wrongly.
+            Containers, CI runners and VMs resumed from a snapshot drift in ways a desktop usually
+            does not.
+          </p>
+          <p>If you have measured the offset, feed it back in:</p>
+        </div>
+        <div className={`${block} mt-3`}>
+          <pre>{`// Measure once against a block you trust...
+const probe = connect({ network: 'mainnet' });
+const block = await probe.provider.getBlock('latest');
+const skew = Date.now() / 1000 - Number(block.timestamp);   // positive: local clock ahead
+
+// ...then hand the corrected clock to the client you actually use.
+const qv = connect({ network: 'mainnet', now: () => Date.now() / 1000 - skew });
+
+// Or override for a single call.
+await vault.affordances(txHash, caller, atUnixSeconds);`}</pre>
+        </div>
+        <p className={`${prose} mt-3`}>
+          A function rather than a scalar offset on purpose: an offset needs a sign convention, and
+          getting it backwards doubles the error instead of cancelling it, silently. Here the
+          arithmetic sits in your code, where it reads as what it means. Detection is deliberately
+          yours — deriving the offset costs an RPC call the SDK should not make on your behalf, and
+          caching one has no clear invalidation.
+        </p>
+        <p className={`${prose} mt-2 text-sm text-dark-400`}>
+          This never touches elapsed-time measurement. Retry backoff, timeouts, poll intervals and
+          cache TTLs stay on the raw local clock — a clock being 12 seconds fast does not make 30
+          seconds of backoff into 18. And nothing here can change an on-chain outcome: the chain is
+          the authority, and a wrong local time fails safe into a revert or a refusal. What it
+          changes is what the SDK <em>tells</em> you.
         </p>
       </div>
 

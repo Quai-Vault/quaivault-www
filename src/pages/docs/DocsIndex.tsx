@@ -66,7 +66,7 @@ export default function DocsIndex() {
     },
     {
       title: 'SDK Guides',
-      description: 'Recipes for deploying, transfers, batching, owner rotation and social recovery',
+      description: 'Recipes for deploying, transfers, batching, owner rotation, social recovery and call decoding',
       path: '/docs/sdk-guides',
       icon: (
   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
