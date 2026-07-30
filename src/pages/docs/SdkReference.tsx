@@ -27,7 +27,7 @@ export default function SdkReference() {
   return (
     <DocLayout
       title="SDK Reference"
-      description="Complete API surface for @quaivault/sdk v0.5.0 — client, vault, factory, recovery, types, errors and utilities."
+      description="Complete API surface for @quaivault/sdk v0.6.0 — client, vault, factory, recovery, types, errors and utilities."
     >
       {/* Client */}
       <div className={panel}>

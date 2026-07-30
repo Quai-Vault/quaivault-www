@@ -59,10 +59,10 @@ export default function SdkOverview() {
       <div className={panel}>
         <h2 className={h2}>Install</h2>
         <div className={block}>
-          <pre>{`npm install @quaivault/sdk`}</pre>
+          <pre>{`npm install @quaivault/sdk quais`}</pre>
         </div>
         <p className={`${prose} mt-3`}>
-          Current version <strong className="text-dark-200">0.5.0</strong>. Ships ESM and CommonJS
+          Current version <strong className="text-dark-200">0.6.0</strong>. Ships ESM and CommonJS
           builds with full TypeScript types, and publishes with an npm provenance attestation
           linking each release to the commit and workflow run that built it.
         </p>
@@ -80,6 +80,41 @@ export default function SdkOverview() {
             changelog
           </a>{' '}
           records every one and why it was made.
+        </p>
+
+        <h3 className={`${h3} mt-5`}>quais is a peer dependency</h3>
+        <div className={`${prose} space-y-3`}>
+          <p>
+            As of 0.6.0 you install <code className={code}>quais</code> yourself, and the supported
+            versions are named explicitly rather than given as a range. npm 7 and later install
+            peers automatically, so most projects will not notice the change.
+          </p>
+        </div>
+        <div className={`${block} mt-3`}>
+          <pre>{`"peerDependencies": { "quais": "1.0.0-alpha.55 || 1.0.0-alpha.56" }`}</pre>
+        </div>
+        <p className={`${prose} mt-3`}>
+          It is a peer rather than a normal dependency for two reasons. The SDK's public API hands
+          you quais types — <code className={code}>Provider</code>,{' '}
+          <code className={code}>Signer</code>, <code className={code}>InterfaceAbi</code> — so you
+          and it must be holding the same object graph. And a pinned normal dependency cannot
+          deduplicate: an app already using quais directly would ship two copies, roughly 200 KB
+          gzip of avoidable weight in a browser bundle.
+        </p>
+        <p className={`${prose} mt-2`}>
+          The allowlist names the versions CI actually runs the suite against, so an unlisted
+          version is refused at install time rather than accepted and hoped for.{' '}
+          <code className={code}>quais</code> is pre-1.0 and every release is an alpha, so there is
+          no compatibility promise to lean on. If you need a version that is not listed,{' '}
+          <a
+            href="https://github.com/Quai-Vault/quaivault-sdk/issues"
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary-500 hover:text-primary-400 underline"
+          >
+            open an issue
+          </a>{' '}
+          — adding one is a test run, not a negotiation.
         </p>
       </div>
 
