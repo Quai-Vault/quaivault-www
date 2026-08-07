@@ -10,7 +10,7 @@ export const config = {
   testnetAppUrl: import.meta.env.VITE_TESTNET_APP_URL || 'https://testnet.quaivault.org',
 
   // GitHub repository
-  githubRepo: import.meta.env.VITE_GITHUB_REPO || 'Quai-Vault/quai-multisig-www',
+  githubRepo: import.meta.env.VITE_GITHUB_REPO || 'Quai-Vault/quaivault-www',
 
   // Supabase (for stats queries)
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',

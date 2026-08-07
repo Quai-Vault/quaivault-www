@@ -8,6 +8,8 @@ import GettingStarted from './pages/docs/GettingStarted'
 import MultisigWallets from './pages/docs/MultisigWallets'
 import Modules from './pages/docs/Modules'
 import FrontendGuide from './pages/docs/FrontendGuide'
+import CliOverview from './pages/docs/CliOverview'
+import CliReference from './pages/docs/CliReference'
 import DeveloperGuide from './pages/docs/DeveloperGuide'
 import SdkOverview from './pages/docs/SdkOverview'
 import SdkGuides from './pages/docs/SdkGuides'
@@ -27,6 +29,8 @@ function App() {
         <Route path="/docs/multisig-wallets" element={<MultisigWallets />} />
         <Route path="/docs/modules" element={<Modules />} />
         <Route path="/docs/frontend-guide" element={<FrontendGuide />} />
+        <Route path="/docs/cli" element={<CliOverview />} />
+        <Route path="/docs/cli-reference" element={<CliReference />} />
         <Route path="/docs/developer-guide" element={<DeveloperGuide />} />
         <Route path="/docs/sdk" element={<SdkOverview />} />
         <Route path="/docs/sdk-guides" element={<SdkGuides />} />

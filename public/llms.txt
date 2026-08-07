@@ -1,0 +1,37 @@
+# Quai Vault
+
+> Quai Vault is a multisignature wallet and modular smart-account system on the Quai ledger of Quai Network. This site documents the web interface, contracts, TypeScript SDK, and command-line client.
+
+Use the CLI when a person, CI job, or software agent needs to inspect or operate a vault from a terminal. Use the SDK when building Quai Vault into a TypeScript or JavaScript application. Qi addresses are on Quai Network's UTXO ledger and cannot own, guard, approve, or operate an EVM-based Quai Vault.
+
+## Start here
+
+- [Documentation index](https://quaivault.org/docs): All user and developer documentation.
+- [Getting started](https://quaivault.org/docs/getting-started): Create and use a multisig vault.
+- [Multisig wallets](https://quaivault.org/docs/multisig-wallets): Proposals, approvals, thresholds, execution, and cancellation.
+- [Security](https://quaivault.org/docs/security): Security considerations and operational guidance.
+- [FAQ](https://quaivault.org/docs/faq): Common questions and troubleshooting.
+
+## Command-line client
+
+- [CLI guide](https://quaivault.org/docs/cli): Install `@quaivault/cli`, configure profiles and keys, safely sign, automate with JSON, and apply a non-interactive signing policy.
+- [CLI reference](https://quaivault.org/docs/cli-reference): Complete `qv` command, option, JSON envelope, error, and exit-code reference.
+- [CLI package on npm](https://www.npmjs.com/package/@quaivault/cli): Published package and installation source.
+- [CLI source](https://github.com/Quai-Vault/quaivault-cli): Source code, changelog, security policy, and issue tracker.
+
+The installed CLI is self-describing. Run `qv --schema --schema-version 1` for the authoritative machine-readable command and output schema matching that installed version. Read-only commands do not need a key. Writes re-read chain state before signing; `--json` does not imply `--yes`; unattended signing also requires the fixed-path policy created by `qv policy init`.
+
+## Developers
+
+- [SDK overview](https://quaivault.org/docs/sdk): Install and configure `@quaivault/sdk`.
+- [SDK guides](https://quaivault.org/docs/sdk-guides): Deployment, transfers, batching, owner rotation, social recovery, and calldata decoding recipes.
+- [SDK reference](https://quaivault.org/docs/sdk-reference): Complete TypeScript API and error reference.
+- [Developer guide](https://quaivault.org/docs/developer-guide): Contract integration, addresses, ABIs, events, and direct interaction.
+- [Modules](https://quaivault.org/docs/modules): Social Recovery and Zodiac-compatible module behavior.
+
+## Applications and source
+
+- [Quai Vault](https://quaivault.org): Project website.
+- [Mainnet application](https://app.quaivault.org): Web application for Quai mainnet.
+- [Testnet application](https://testnet.quaivault.org): Web application for Orchard Testnet.
+- [Website source](https://github.com/Quai-Vault/quaivault-www): Source for this documentation site.
