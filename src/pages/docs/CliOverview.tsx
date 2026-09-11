@@ -25,7 +25,7 @@ qv doctor`}</pre>
         </div>
         <div className={`${prose} mt-3 space-y-2`}>
           <p>
-            The current release is <code className={code}>@quaivault/cli@0.6.1</code>. It provides both{' '}
+            The current release is <code className={code}>@quaivault/cli@0.7.0</code>. It provides both{' '}
             <code className={code}>qv</code> and <code className={code}>quaivault</code> binaries and
             requires <strong className="text-dark-200">Node.js 22 or later</strong>.
           </p>
@@ -329,10 +329,50 @@ qv completion fish > ~/.config/fish/completions/qv.fish
 qv tui`}</pre>
         </div>
         <p className={`${prose} mt-3`}>
-          The full-screen TUI monitors configured vaults. It never retains a signing key; write
-          actions are delegated to a short-lived one-shot <code className={code}>qv</code> process.
-          Use <code className={code}>qv watch [vault]</code> when an event stream is a better fit than
-          an interactive display.
+          The full-screen TUI provides inbox, history, activity, assets, vault, recovery, policy,
+          and proposal panes. It preserves your selected profile and identity when opening a
+          command for review. It never retains a signing key. The command result stays visible
+          until you press a key, so you can read and copy its transaction hash.
+        </p>
+        <div className={`${block} mt-4`}>
+          <pre>{`Tab / Shift-Tab   Next / previous pane
+1–8               Jump to a pane
+[ / ]             Previous / next vault
+↑/↓ or j/k        Navigate lists and scroll details
+PgUp / PgDn       Move one page
+Home / End        First / last row or line
+/                 Search inbox or transaction history
+Enter / Esc       Apply search / clear search
+←/→ in history    Transactions / deposits / transfers / recoveries
+m in history      Load 50 more records
+←/→ in recovery   Choose a pending recovery request
+r / ? / q         Refresh / keyboard guide / back or quit`}</pre>
+        </div>
+        <p className={`${prose} mt-4`}>
+          Proposal forms cover transfers, raw and ABI-assisted calls, batches, vault administration,
+          message signatures, vault creation, and recovery. Token proposals require explicit token
+          decimals. Proposal forms include expiry, execution delay, and an optional retry key.
+          Use Tab/Shift-Tab between fields and Enter to advance; Enter on the last field opens
+          the command for review before signing.
+        </p>
+        <p className={`${prose} mt-3`}>
+          Paste calldata, address lists, and file paths with your terminal’s normal paste shortcut.
+          Arrow keys and Home/End move the cursor; Backspace/Delete edit; Ctrl-U clears a field,
+          Ctrl-W deletes a word, and Ctrl-K deletes to the end. Oversized input is refused visibly.
+        </p>
+        <p className={`${prose} mt-3`}>
+          The layout resizes down to 40 columns by 12 rows. Kitty keyboard support is detected
+          automatically, with standard input for other terminals. No special font or terminal
+          configuration is required. Normal mouse text selection stays available, and{' '}
+          <code className={code}>--color never</code> or <code className={code}>NO_COLOR</code>{' '}
+          provides monochrome output. Wider windows show more table detail.
+        </p>
+        <p className={`${prose} mt-3`}>
+          History loads on demand. Vault discovery and pending transactions page beyond the
+          default 50 entries; a visible warning appears at the 1,000-record discovery or pending
+          limit. Failed reads remain visibly unavailable or stale. Indexed lists are not an
+          atomic chain snapshot; the signing command rereads chain state before acting.
+          Use <code className={code}>qv watch [vault]</code> for a plain event stream.
         </p>
       </div>
 

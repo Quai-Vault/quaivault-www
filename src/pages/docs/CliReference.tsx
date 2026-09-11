@@ -43,7 +43,7 @@ export default function CliReference() {
   return (
     <DocLayout
       title="CLI Reference"
-      description="Complete command and option reference for @quaivault/cli v0.6.1."
+      description="Complete command and option reference for @quaivault/cli v0.7.0."
     >
       <div className={panel}>
         <h2 className={h2}>Syntax</h2>
@@ -476,7 +476,7 @@ export default function CliReference() {
             {
               usage: 'qv tui',
               description: 'Open the full-screen monitor for vaults associated with the active identity.',
-              note: 'The TUI delegates signatures to short-lived one-shot qv processes and never retains a key.',
+              note: 'Eight responsive panes; ? opens keyboard help, / searches transactions, and ←/→ selects history categories or recovery requests. m loads more history. Kitty keyboard support is detected automatically. Signing preserves the reviewed profile and identity in a short-lived qv process.',
             },
           ]}
         />
