@@ -62,7 +62,7 @@ export default function SdkOverview() {
           <pre>{`npm install @quaivault/sdk quais`}</pre>
         </div>
         <p className={`${prose} mt-3`}>
-          Current version <strong className="text-dark-200">0.6.0</strong>. Ships ESM and CommonJS
+          Current version <strong className="text-dark-200">0.6.1</strong>. Ships ESM and CommonJS
           builds with full TypeScript types, and publishes with an npm provenance attestation
           linking each release to the commit and workflow run that built it.
         </p>
@@ -333,6 +333,11 @@ if (result.outcome !== 'executed') {
         <h2 className={h2}>Resilience</h2>
         <div className={`${prose} space-y-3`}>
           <p>
+            Before every write, both the read RPC and the signer's RPC must report the selected
+            network's chain ID. External signers must be connected and have a valid Quai address.
+            Supplied deployment salts are checked for the deployer's shard before broadcast.
+          </p>
+          <p>
             Reads retry transient RPC and indexer failures with exponential backoff and full
             jitter. Rate limits, 5xx responses and raw transport failures are retried; reverts,
             user rejections, and nonce and funds errors are permanent by definition and are not.
@@ -343,6 +348,12 @@ if (result.outcome !== 'executed') {
             <strong className="text-dark-200">Writes are never retried.</strong> A resubmit that
             looks like a timeout to the client may already be in the mempool, so retrying risks a
             double broadcast.
+          </p>
+          <p>
+            If submission succeeds but its receipt cannot be verified,{' '}
+            <code className={code}>BroadcastError</code> carries code{' '}
+            <code className={code}>BROADCAST_UNKNOWN</code> and the submitted{' '}
+            <code className={code}>chainTxHash</code>. Reconcile that hash on chain before retrying.
           </p>
         </div>
         <div className={`${block} mt-3`}>

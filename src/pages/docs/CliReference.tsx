@@ -43,7 +43,7 @@ export default function CliReference() {
   return (
     <DocLayout
       title="CLI Reference"
-      description="Complete command and option reference for @quaivault/cli v0.5.0."
+      description="Complete command and option reference for @quaivault/cli v0.6.1."
     >
       <div className={panel}>
         <h2 className={h2}>Syntax</h2>
@@ -237,7 +237,7 @@ export default function CliReference() {
                 '--keystore <file> — import an existing V3 keystore JSON file',
                 '--key-file <path> — read a raw hex private key from a file',
                 '--key-fd <n> — read a raw hex private key from a file descriptor',
-                '--accept-weak-kdf — allow an imported keystore below the safe scrypt floor',
+                '--accept-weak-kdf — accept a weaker scrypt or PBKDF2 keystore at import; resource limits still apply',
                 '--use — make the imported key active',
               ],
             },
@@ -391,8 +391,16 @@ export default function CliReference() {
               description: 'Propose signing an EIP-1271 message, or revoking it with --unsign.',
             },
             {
+              usage: 'qv propose enable-recovery <vault> [proposal options]',
+              description: 'Propose enabling the SocialRecoveryModule configured for this network. Owners must approve and execute it.',
+            },
+            {
+              usage: 'qv propose disable-recovery <vault> [proposal options]',
+              description: 'Propose disabling the configured recovery module; saved guardian configuration remains visible.',
+            },
+            {
               usage: 'qv propose setup-recovery <vault> --guardian <address>... --threshold <n> --recovery-period <duration> [options]',
-              description: 'Propose social recovery configuration. Repeat --guardian for every guardian.',
+              description: 'Propose social recovery configuration after enabling the module. Repeat --guardian for every guardian.',
             },
           ]}
         />
@@ -412,7 +420,7 @@ export default function CliReference() {
         <div className="mt-4">
           <Commands
             entries={[
-              { usage: 'qv recovery status [vault]', description: 'Show guardian configuration and any pending recovery. No key required.' },
+              { usage: 'qv recovery status [vault]', description: 'Show the configured module address, enabled/configured state, guardians, and pending recovery. No key required.' },
               { usage: 'qv recovery history [vault]', description: 'Show past recoveries. No key required; requires the indexer.' },
               {
                 usage: 'qv recovery initiate <vault> --owner <address>... --threshold <n>',
@@ -485,6 +493,7 @@ export default function CliReference() {
   "retryable": false,
   "data": {},
   "steps": [],
+  "error": null,
   "next": [],
   "untrusted": [],
   "warnings": []
@@ -509,10 +518,19 @@ export default function CliReference() {
             <code className={code}>CONFIG</code>, <code className={code}>PRECONDITION</code>,{' '}
             <code className={code}>NO_SIGNER</code>, <code className={code}>NO_INDEXER</code>,{' '}
             <code className={code}>INDEXER_QUERY</code>, <code className={code}>NOT_FOUND</code>,{' '}
-            <code className={code}>REVERT</code>, <code className={code}>SALT_MINING</code>,{' '}
+            <code className={code}>REVERT</code>, <code className={code}>BROADCAST_UNKNOWN</code>,{' '}
+            <code className={code}>SALT_MINING</code>,{' '}
             <code className={code}>STALE_PROPOSAL</code>, <code className={code}>ABORTED</code>,{' '}
             <code className={code}>POLICY</code>, <code className={code}>DECLINED</code>, and{' '}
             <code className={code}>UNKNOWN</code>.
+          </p>
+          <p>
+            <code className={code}>BROADCAST_UNKNOWN</code> exits 1 with{' '}
+            <code className={code}>changed: &quot;unknown&quot;</code>,{' '}
+            <code className={code}>retryable: false</code>, and{' '}
+            <code className={code}>chainTxHash</code> in both data and error. Verify that receipt
+            before resubmitting. A reserved idempotency key blocks duplicate submissions after
+            interruption until its journal record is reconciled.
           </p>
         </div>
 

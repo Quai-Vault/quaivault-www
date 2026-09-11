@@ -27,7 +27,7 @@ export default function SdkReference() {
   return (
     <DocLayout
       title="SDK Reference"
-      description="Complete API surface for @quaivault/sdk v0.6.0 — client, vault, factory, recovery, types, errors and utilities."
+      description="Complete API surface for @quaivault/sdk v0.6.1 — client, vault, factory, recovery, types, errors and utilities."
     >
       {/* Client */}
       <div className={panel}>
@@ -156,7 +156,7 @@ export default function SdkReference() {
             ['await vault.revokeApproval(txHash)', ''],
             ['await vault.cancel(txHash)', 'Proposer-only, and only before quorum is ever reached.'],
             ['await vault.expire(txHash)', 'Permissionless once past the deadline.'],
-            ['await vault.waitForExecutable(txHash, options?)', 'Polls until ready; fails fast when waiting cannot help.'],
+            ['await vault.waitForExecutable(txHash, options?)', 'Polls until ready; if quorum exists but the clock has not started, call execute() once before waiting. Poll delays honor AbortSignal immediately.'],
             ['await vault.waitForIndexer(blockNumber?, options?)', 'Closes the write-then-read race. Returns { reached, lastIndexedBlock }.'],
             ['vault.watch(handler, options?) → Subscription', 'Realtime; one channel per vault. Events fire after the indexer processes a block, so treat them as a signal to re-read.'],
           ]}
@@ -340,7 +340,8 @@ export default function SdkReference() {
             <tbody className="align-top">
               {[
                 ['ABORTED', 'AbortError', 'An AbortSignal fired — one typed error for every abort path'],
-                ['CONFIG', 'ConfigError', 'Missing or invalid configuration, including an unusable private key'],
+                ['BROADCAST_UNKNOWN', 'BroadcastError', 'Submitted but receipt unverified; carries chainTxHash. Reconcile before retrying.'],
+                ['CONFIG', 'ConfigError', 'Missing or invalid configuration, unusable private key, or RPC chain ID mismatch'],
                 ['NO_SIGNER', 'NoSignerError', 'A write was attempted on a read-only client'],
                 ['NO_INDEXER', 'NoIndexerError', 'An indexer-only operation without indexer configuration'],
                 ['INDEXER_QUERY', 'IndexerQueryError', 'The indexer query failed'],

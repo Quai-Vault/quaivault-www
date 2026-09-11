@@ -1,6 +1,6 @@
 import { Github, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useTheme } from '../contexts/ThemeContext'
+import { useTheme } from '../contexts/theme'
 import config from '../config'
 
 export default function Footer() {

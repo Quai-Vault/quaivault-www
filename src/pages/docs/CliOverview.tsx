@@ -25,7 +25,7 @@ qv doctor`}</pre>
         </div>
         <div className={`${prose} mt-3 space-y-2`}>
           <p>
-            The published package is <code className={code}>@quaivault/cli</code>. It provides both{' '}
+            The current release is <code className={code}>@quaivault/cli@0.6.1</code>. It provides both{' '}
             <code className={code}>qv</code> and <code className={code}>quaivault</code> binaries and
             requires <strong className="text-dark-200">Node.js 22 or later</strong>.
           </p>
@@ -135,6 +135,11 @@ qv tx execute 0x<vault> 0x<transaction-hash>`}</pre>
             chain receipt is not treated as proof that the inner vault call succeeded.
           </p>
           <p>
+            Both RPC providers must match the selected network before broadcast. The unlocked key
+            must match the identity selected by flags, environment, or profile. Invalid network
+            names are rejected instead of falling back to mainnet.
+          </p>
+          <p>
             Unknown or unverified calldata is shown as raw 32-byte words. Signing it—or signing a
             DelegateCall—requires <code className={code}>--i-understand-unverified</code>. Prefer
             commands whose decode provenance is <code className={code}>builtin</code>.
@@ -230,7 +235,17 @@ qv tx approve 0x<vault> 0x<full-hash> \
             Proposal automation should set <code className={code}>--idempotency-key</code> to a stable
             operation identifier. A confirmed retry with identical inputs returns{' '}
             <code className={code}>changed: false</code>; reusing the identifier with different inputs
-            fails closed.
+            fails closed. The key is reserved before submission; an interrupted or unresolved
+            submission blocks reuse until its chain history and journal record are reconciled.
+            Do not bypass that check by using a new identifier.
+          </p>
+          <p>
+            A receipt timeout after submission reports <code className={code}>BROADCAST_UNKNOWN</code>,{' '}
+            <code className={code}>changed: &quot;unknown&quot;</code>, and{' '}
+            <code className={code}>retryable: false</code>. The submitted{' '}
+            <code className={code}>chainTxHash</code> is in both data and error. Look up that hash
+            before retrying. A terminal target-call failure reports changed: true because the
+            vault proposal was consumed.
           </p>
           <p>
             Under <code className={code}>--json</code>, abbreviated transaction hashes are rejected.
@@ -246,12 +261,32 @@ qv tx approve 0x<vault> 0x<full-hash> \
 qv policy show`}</pre>
         </div>
         <p className={`${prose} mt-3`}>
-          Non-interactive writes are refused unless the fixed-path{' '}
-          <code className={code}>~/.quaivault/policy.toml</code> exists. The starter policy limits
+          Non-interactive writes require <code className={code}>policy.toml</code> in the CLI
+          configuration directory, normally <code className={code}>~/.quaivault</code> or{' '}
+          <code className={code}>$XDG_CONFIG_HOME/quaivault</code>. The starter policy limits
           approval value and rate, refuses vault administration, module configuration, recovery
-          setup, and DelegateCall, and requires a built-in ABI decode. There is no flag or environment
-          variable that lets the caller relocate the policy it is meant to obey.
+          setup, and DelegateCall, and requires a built-in ABI decode. Invalid fields or values
+          fail closed. Approval slots are reserved before signing and count for one hour even
+          when the result is uncertain. There is no per-command policy-path override.
         </p>
+      </div>
+
+      <div className={panel}>
+        <h2 className={h2}>Key safety and interrupted operations</h2>
+        <div className={`${prose} space-y-3`}>
+          <p>
+            Keystore import validates scrypt N, r, p, combined memory and CPU cost, and PBKDF2
+            iterations before decryption. The normal floor is scrypt N=131072 with r=8, or
+            600000 PBKDF2 iterations. <code className={code}>--accept-weak-kdf</code> can accept a
+            weaker imported key, but never bypasses resource limits. Imports are re-encrypted
+            with the standard scrypt settings and cannot overwrite a concurrently imported key.
+          </p>
+          <p>
+            Signing locks do not expire while a receipt is pending. After a crash, verify the
+            recorded PID and pending chain transactions before manually removing the lock named
+            in the error. Reconcile unresolved idempotency records before repairing the journal.
+          </p>
+        </div>
       </div>
 
       <div className={panel}>

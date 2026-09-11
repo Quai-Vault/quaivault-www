@@ -14,7 +14,7 @@ import {
   FileText,
 } from 'lucide-react'
 import VaultScene from '../components/VaultScene'
-import { useTheme } from '../contexts/ThemeContext'
+import { useTheme } from '../contexts/theme'
 import config from '../config'
 
 export default function About() {
