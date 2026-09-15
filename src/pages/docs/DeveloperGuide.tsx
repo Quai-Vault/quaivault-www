@@ -144,7 +144,7 @@ export default function DeveloperGuide() {
                     <td className="pr-4 py-1">Mainnet</td>
                     <td className="pr-4 py-1">9</td>
                     <td className="pr-4 py-1 text-primary-400">https://rpc.quai.network</td>
-                    <td className="py-1 text-primary-400">https://quaiscan.io</td>
+                    <td className="py-1 text-primary-400">https://explorer.qu.ai</td>
                   </tr>
                   <tr>
                     <td className="pr-4 py-1">Orchard Testnet</td>
